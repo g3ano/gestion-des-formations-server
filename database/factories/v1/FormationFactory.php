@@ -21,6 +21,9 @@ class FormationFactory extends Factory
         $code_formation = Arr::random(['CDI', 'CDA', 'CDE', 'LDI', 'LDA', 'LDE']);
         $mode = Arr::random(['distance', 'Présentiel', 'Blended']);
         $lieu = Arr::random(['E-LEARNING', 'ALGERIE', 'ALGER', 'LONDON', 'ORAN']);
+        $effectif = fake()->numberBetween(1, 10);
+        $durree = fake()->numberBetween(2, 10);
+        $hJ = $effectif * $durree;
 
         return [
             'categorie_id' => fake()->numberBetween(1, 3),
@@ -34,8 +37,9 @@ class FormationFactory extends Factory
             'code_formation' => $code_formation,
             'mode' => $mode,
             'lieu' => $lieu,
-            'effectif' => fake()->numberBetween(1, 10),
-            'durree' => fake()->numberBetween(2, 10),
+            'effectif' => $effectif,
+            'durree' => $durree,
+            'h_j' => $hJ,
         ];
     }
 }

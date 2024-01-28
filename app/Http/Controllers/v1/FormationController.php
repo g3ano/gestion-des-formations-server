@@ -17,9 +17,9 @@ class FormationController extends Controller
 
     public function index(Request $request)
     {
-        // $numberOfPages = $request->query('pageSize') ?? 15;
+        //$numberOfPages = $request->query('pageSize') ?? 15;
 
-        // $result = FormationFilter::parse($request);
+        //$result = FormationFilter::parse($request);
 
         $formations = DB::table('formations')
             ->join('categories', 'formations.categorie_id', '=', 'categories.id')
@@ -42,24 +42,26 @@ class FormationController extends Controller
     public function store(StoreFormationRequest $request)
     {
         /**
-         * coming data should be formated like this
+         * coming data should be formatted like this
          * [
          *      'direct' => [
-         *          // columns that will inserted directly to db
+         *          //columns that will inserted directly to db
          *      ],
          *      'common' => [
-         *          // columns that will be replaced with their matching id from db,
-         *          // or create new records if not found
+         *          //columns that could be common with many formations or could be unique
+         *          //relationship columns, they gonna be replaced by matching ID from db,
+         *          //or new record will be created, if not found
          *      ],
          *      'cout' => [
-         *          // columns that will be inserted into couts table, then return record id
+         *          //columns that will be inserted into couts table, then return record id
+         *          //pedagogiques is different for each row? what the hell this depends on?
+         *          //I guess it intitule?
          *      ],
          * ]
          */
         $data = $request->validated();
 
-        // TODO: some of cout columns are calcullated based on other columns
-        // investigate more
+        //TODO: some of cout columns are calculated based on other columns
 
         $formationData = [];
 
@@ -74,6 +76,8 @@ class FormationController extends Controller
             'created_at' => $this->timestamp(),
             'updated_at' => $this->timestamp(),
         ]);
+
+        $formationData['h_j'] = $formationData['direct']['effectif'] * $formationData['direct']['durree'];
 
         $id = DB::table('formations')->insertGetId([
             ...$data['direct'],
@@ -116,6 +120,11 @@ class FormationController extends Controller
     {
     }
 
+    /**
+     * Get the current Timestamp
+     * 
+     * @return \Illuminate\Support\Carbon
+     */
     private function timestamp()
     {
         return now();
@@ -134,23 +143,21 @@ class FormationController extends Controller
         $tableName = strtolower($attr) . 's';
         $isAvailable = in_array($tableName, $tables, true);
 
-        if ($isAvailable) {
-            if (Schema::hasTable($tableName)) {
-                $record = DB::table($tableName)
-                    ->select('id')
-                    ->where($attr, '=', $value)
-                    ->first();
+        if ($isAvailable && Schema::hasTable($tableName)) {
+            $record = DB::table($tableName)
+                ->select('id')
+                ->where($attr, '=', $value)
+                ->first();
 
-                if ($record) {
-                    return $record->id;
-                }
-
-                return DB::table($tableName)->insertGetId([
-                    $attr => $value,
-                    'updated_at' => $this->timestamp(),
-                    'created_at' => $this->timestamp(),
-                ]);
+            if ($record) {
+                return $record->id;
             }
+
+            return DB::table($tableName)->insertGetId([
+                $attr => $value,
+                'updated_at' => $this->timestamp(),
+                'created_at' => $this->timestamp(),
+            ]);
         }
 
         return null;
@@ -190,16 +197,34 @@ class FormationController extends Controller
     }
 
     /**
-     * Filter the given column
-     *
-     * @param Request $request
-     * @return FormationResource
+     * Get common values for the formation. 
+     * **PS:** common values are values that can be found in multiple formations,
+     *  they also could be unique to only one formation
+     * 
+     * @return array
      **/
-    public function FunctionName(Request $request)
+    public function getCommonValues()
     {
 
-        $query = $request->query();
+        $intitules = DB::table('intitules')
+            ->select(['intitule'])
+            ->get()
+            ->pluck('intitule');
+        $organismes = DB::table('organismes')
+            ->select(['organisme'])
+            ->get()
+            ->pluck('organisme');
+        $code_domaines = DB::table('code_domaines')
+            ->select(['code_domaine'])
+            ->get()
+            ->pluck('code_domaine');
 
-        return $query;
+        return $this->success([
+            'commonValues' => [
+                'intitules' => $intitules,
+                'organismes' => $organismes,
+                'code_domaines' => $code_domaines,
+            ]
+        ]);
     }
 }

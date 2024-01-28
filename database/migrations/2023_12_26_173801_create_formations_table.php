@@ -34,6 +34,7 @@ return new class extends Migration
             $table->string('lieu', 50);
             $table->integer('effectif');
             $table->integer('durree');
+            $table->integer('h_j');
             $table->string('observation', 255)->nullable();
             $table->timestamps();
         });

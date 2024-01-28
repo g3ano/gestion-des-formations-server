@@ -28,6 +28,7 @@ class FormationResource extends JsonResource
             "lieu" => $this->lieu,
             "effectif" => $this->effectif,
             "durree" => $this->durree,
+            "h_j" => $this->h_j,
             "observation" => $this->observation ? $this->observation : '',
             "categorie" => $this->categorie,
             "domaine" => $this->abbr,
