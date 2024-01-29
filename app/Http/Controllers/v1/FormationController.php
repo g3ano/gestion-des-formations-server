@@ -30,12 +30,32 @@ class FormationController extends Controller
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
             ->select(['formations.*', 'categories.categorie', 'domaines.abbr', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'])
-            ->orderBy('id')
+            ->orderBy('created_at', 'desc')
             ->limit(1500)
             ->get();
 
         return $this->success([
             'formations' => FormationResource::collection($formations),
+        ]);
+    }
+
+    public function show(string $id)
+    {
+        $formation = DB::table('formations')
+            ->join('categories', 'formations.categorie_id', '=', 'categories.id')
+            ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
+            ->join('types', 'formations.type_id', '=', 'types.id')
+            ->join('intitules', 'formations.intitule_id', '=', 'intitules.id')
+            ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
+            ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
+            ->join('couts', 'formations.cout_id', '=', 'couts.id')
+            ->select(['formations.*', 'categories.categorie', 'domaines.abbr', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'])
+            ->select()
+            ->where('formations.id', $id)
+            ->first();
+
+        return $this->success([
+            'formation' => $formation
         ]);
     }
 
@@ -53,9 +73,18 @@ class FormationController extends Controller
          *          //or new record will be created, if not found
          *      ],
          *      'cout' => [
-         *          //columns that will be inserted into couts table, then return record id
-         *          //pedagogiques is different for each row? what the hell this depends on?
-         *          //I guess it intitule?
+         *          //columns that will be inserted into couts table, then return the record id
+         *          //these columns are calculated based on the common and/or direct columns,
+         *          //e.g:
+         *          //pédagogiques: 
+         *          // 1) h_j multiplied by a price specified by the organisme, lieu and mode
+         *          // 2) effectif multiplied by a price specified by the organisme, lieu and 
+         *          //    mode
+         *          //it's a total mess, basically all couts columns are like this
+         *          //more investigation on this later
+         *          //the goal is to find a clear pattern or formula
+         *          //for now i'll do it manually 
+         *          //same thing applies for dont_device
          *      ],
          * ]
          */
@@ -67,7 +96,7 @@ class FormationController extends Controller
 
         if (isset($data['common'])) {
             foreach ($data['common'] as $attr => $value) {
-                $formationData[$attr . '_id'] = $this->getId($attr, trim($value));
+                $formationData[$attr . '_id'] = $this->getId($attr, $value);
             }
         }
 
@@ -77,7 +106,7 @@ class FormationController extends Controller
             'updated_at' => $this->timestamp(),
         ]);
 
-        $formationData['h_j'] = $formationData['direct']['effectif'] * $formationData['direct']['durree'];
+        $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
 
         $id = DB::table('formations')->insertGetId([
             ...$data['direct'],
@@ -140,7 +169,7 @@ class FormationController extends Controller
     private function getId(string $attr, string $value)
     {
         $tables = ['intitules', 'code_domaines', 'organismes'];
-        $tableName = strtolower($attr) . 's';
+        $tableName = strtolower(trim($attr)) . 's';
         $isAvailable = in_array($tableName, $tables, true);
 
         if ($isAvailable && Schema::hasTable($tableName)) {

@@ -13,7 +13,5 @@ Route::prefix('formations')->group(function () {
     Route::post('/', [FormationController::class, 'store']);
     Route::delete('/', [FormationController::class, 'delete']);
     Route::get('/commonValues', [FormationController::class, 'getCommonValues']);
-
-    // sort
-    Route::get('/sort', [FormationController::class, 'sortColumn']);
+    Route::get('/{id}', [FormationController::class, 'show']);
 });
