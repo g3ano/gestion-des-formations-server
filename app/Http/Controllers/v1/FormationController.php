@@ -17,10 +17,6 @@ class FormationController extends Controller
 
     public function index(Request $request)
     {
-        //$numberOfPages = $request->query('pageSize') ?? 15;
-
-        //$result = FormationFilter::parse($request);
-
         $formations = DB::table('formations')
             ->join('categories', 'formations.categorie_id', '=', 'categories.id')
             ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
@@ -76,21 +72,19 @@ class FormationController extends Controller
          *          //columns that will be inserted into couts table, then return the record id
          *          //these columns are calculated based on the common and/or direct columns,
          *          //e.g:
-         *          //pédagogiques: 
+         *          //pédagogiques:
          *          // 1) h_j multiplied by a price specified by the organisme, lieu and mode
-         *          // 2) effectif multiplied by a price specified by the organisme, lieu and 
+         *          // 2) effectif multiplied by a price specified by the organisme, lieu and
          *          //    mode
          *          //it's a total mess, basically all couts columns are like this
          *          //more investigation on this later
          *          //the goal is to find a clear pattern or formula
-         *          //for now i'll do it manually 
+         *          //for now i'll do it manually
          *          //same thing applies for dont_device
          *      ],
          * ]
          */
         $data = $request->validated();
-
-        //TODO: some of cout columns are calculated based on other columns
 
         $formationData = [];
 
@@ -136,12 +130,12 @@ class FormationController extends Controller
 
         if (count($rows) === count($ids)) {
             return $this->success([
-                'message' => 'Formation was deleted successfully',
+                'message' => 'Formation(s) was deleted successfully',
                 'effected rows' => count($rows),
             ]);
         }
         return $this->success([
-            'message' => 'not equal',
+            'message' => 'Some error has occurred',
         ]);
     }
 
@@ -151,7 +145,7 @@ class FormationController extends Controller
 
     /**
      * Get the current Timestamp
-     * 
+     *
      * @return \Illuminate\Support\Carbon
      */
     private function timestamp()
@@ -226,10 +220,10 @@ class FormationController extends Controller
     }
 
     /**
-     * Get common values for the formation. 
+     * Get common values for the formation.
      * **PS:** common values are values that can be found in multiple formations,
      *  they also could be unique to only one formation
-     * 
+     *
      * @return array
      **/
     public function getCommonValues()

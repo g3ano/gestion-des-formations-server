@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\v1\CodeDomaine;
 use App\Models\v1\Cout;
+use App\Models\v1\Employee;
 use App\Models\v1\Formation;
 use App\Models\v1\Intitule;
 use App\Models\v1\Organisme;
@@ -42,10 +43,12 @@ class DatabaseSeeder extends Seeder
 
         ]);
 
-        Intitule::factory(1000)->create();
-        CodeDomaine::factory(200)->create();
-        Organisme::factory(200)->create();
-        Cout::factory(200)->create();
-        Formation::factory(5000)->create();
+        Intitule::factory(100)->create();
+        CodeDomaine::factory(100)->create();
+        Organisme::factory(100)->create();
+        Cout::factory(100)->create();
+        Formation::factory(500)->create();
+
+        Employee::factory(200)->create();
     }
 }
