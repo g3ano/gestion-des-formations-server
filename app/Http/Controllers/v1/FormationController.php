@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\v1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\v1\Employee\UpdateFormationRequest;
 use App\Http\Requests\v1\Formation\StoreFormationRequest;
 use App\Http\Resources\FormationResource;
 use App\Services\Filters\FormationFilter;
@@ -114,7 +115,56 @@ class FormationController extends Controller
         ]);
     }
 
-    public function delete(Request $request)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateFormationRequest $request, string $id)
+    {
+        $formation = DB::table('formations')
+            ->join('categories', 'formations.categorie_id', '=', 'categories.id')
+            ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
+            ->join('types', 'formations.type_id', '=', 'types.id')
+            ->join('intitules', 'formations.intitule_id', '=', 'intitules.id')
+            ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
+            ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
+            ->join('couts', 'formations.cout_id', '=', 'couts.id')
+            ->select()
+            ->where('id', $id)
+            ->first();
+
+        $data = $request->validated();
+
+        $toUpdate = [];
+        foreach ($data['cout'] as $attr => $value) {
+            $existing = $formation[$attr];
+
+            if ($existing !== $value) {
+                $toUpdate[$attr] = $value;
+            }
+        }
+
+        if (count($toUpdate)) {
+            $toUpdate['updated_at'] = $this->timestamp();
+            DB::table('couts')
+                ->select()
+                ->where('id', $formation->cout_id)
+                ->first()
+                ->update($toUpdate);
+        }
+
+        $common = [];
+        foreach ($data['common'] as $attr => $value) {
+            $existing = $formation[$attr];
+            if ($existing !== $value) {
+                $common[$attr] = $this->getId($attr, $value, true);
+            } else {
+                $common[$attr] = $formation[$attr . '_id'];
+            }
+        }
+    }
+
+
+    public function destroy(Request $request)
     {
         $rows = [];
         $ids = $request->input('ids');
@@ -139,10 +189,6 @@ class FormationController extends Controller
         ]);
     }
 
-    public function update()
-    {
-    }
-
     /**
      * Get the current Timestamp
      *
@@ -154,17 +200,26 @@ class FormationController extends Controller
     }
 
     /**
-     * Get the id for a value, if the value doesn't exists insert the value then get id
+     * Get the row id if search value is found,
+     * if the value doesn't exist create a new record from the value then get id,
+     * when `$update` is true however, search is skipped and a new record is created immediately
      *
-     * @param string $attr attribute to search for in the table
-     * @param string $value search value
+     * @param string $attr column to search for in the table
+     * @param string $value column value
      * @return int|null
      **/
-    private function getId(string $attr, string $value)
+    private function getId(string $attr, string $value, bool $update = false)
     {
         $tables = ['intitules', 'code_domaines', 'organismes'];
         $tableName = strtolower(trim($attr)) . 's';
         $isAvailable = in_array($tableName, $tables, true);
+
+        if ($update) {
+            return DB::table($tableName)->insertGetId([
+                $attr => $value,
+                'updated_at' => $this->timestamp(),
+            ]);
+        }
 
         if ($isAvailable && Schema::hasTable($tableName)) {
             $record = DB::table($tableName)

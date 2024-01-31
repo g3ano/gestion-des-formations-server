@@ -64,7 +64,7 @@ class EmployeeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function delete(Request $request)
+    public function destroy(Request $request)
     {
         $rows = [];
         $ids = $request->input('ids');
