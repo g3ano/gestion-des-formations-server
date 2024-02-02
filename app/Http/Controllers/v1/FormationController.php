@@ -16,7 +16,11 @@ class FormationController extends Controller
 {
     use HttpResponseTrait;
 
-    public function index(Request $request)
+    private $sqlQuery = [
+        'formations.*', 'categories.categorie', 'domaines.abbr as domaine', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'
+    ];
+
+    public function index()
     {
         $formations = DB::table('formations')
             ->join('categories', 'formations.categorie_id', '=', 'categories.id')
@@ -26,14 +30,14 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select(['formations.*', 'categories.categorie', 'domaines.abbr', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'])
+            ->select($this->sqlQuery)
             ->orderBy('created_at', 'desc')
             ->limit(1500)
             ->get();
 
-        return $this->success([
-            'formations' => FormationResource::collection($formations),
-        ]);
+        return $this->success(
+            FormationResource::collection($formations)
+        );
     }
 
     public function show(string $id)
@@ -46,14 +50,11 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select(['formations.*', 'categories.categorie', 'domaines.abbr', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'])
-            ->select()
+            ->select($this->sqlQuery)
             ->where('formations.id', $id)
             ->first();
 
-        return $this->success([
-            'formation' => $formation
-        ]);
+        return $this->success(FormationResource::make($formation));
     }
 
     public function store(StoreFormationRequest $request)
@@ -128,41 +129,57 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select()
-            ->where('id', $id)
+            ->select($this->sqlQuery)
+            ->where('formations.id', $id)
             ->first();
 
         $data = $request->validated();
 
-        $toUpdate = [];
+        $couts = [];
         foreach ($data['cout'] as $attr => $value) {
-            $existing = $formation[$attr];
+            $attrOldValue = $formation->$attr;
 
-            if ($existing !== $value) {
-                $toUpdate[$attr] = $value;
+            if ($attrOldValue !== $value) {
+                $couts[$attr] = $value;
             }
         }
 
-        if (count($toUpdate)) {
-            $toUpdate['updated_at'] = $this->timestamp();
+        if (count($couts)) {
+            $couts['updated_at'] = $this->timestamp();
             DB::table('couts')
                 ->select()
                 ->where('id', $formation->cout_id)
-                ->first()
-                ->update($toUpdate);
+                ->update($couts);
         }
 
-        $common = [];
+        $formationData = [
+            'cout_id' => $formation->cout_id,
+        ];
+
         foreach ($data['common'] as $attr => $value) {
-            $existing = $formation[$attr];
-            if ($existing !== $value) {
-                $common[$attr] = $this->getId($attr, $value, true);
-            } else {
-                $common[$attr] = $formation[$attr . '_id'];
-            }
+            $attrOldValue = $formation->$attr;
+            $attrWithId = $attr . '_id';
+
+            $formationData[$attrWithId] = $value !== $attrOldValue
+                ? $this->getId($attr, $value, true)
+                : $formation->$attrWithId;
+        }
+
+        $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
+
+        $rowId = DB::table('formations')->insertGetId([
+            ...$data['direct'],
+            ...$formationData,
+            'updated_at' => $this->timestamp(),
+        ]);
+
+        if ($rowId) {
+            return $this->success([
+                'message' => 'Resource was updated successfully',
+                'rowId' => $rowId,
+            ]);
         }
     }
-
 
     public function destroy(Request $request)
     {
@@ -202,8 +219,8 @@ class FormationController extends Controller
     /**
      * Get the row id if search value is found,
      * if the value doesn't exist create a new record from the value then get id,
-     * when `$update` is true however, search is skipped and a new record is created immediately
-     *
+     * `$update` is used to indicate update operation 
+     * 
      * @param string $attr column to search for in the table
      * @param string $value column value
      * @return int|null
@@ -214,12 +231,7 @@ class FormationController extends Controller
         $tableName = strtolower(trim($attr)) . 's';
         $isAvailable = in_array($tableName, $tables, true);
 
-        if ($update) {
-            return DB::table($tableName)->insertGetId([
-                $attr => $value,
-                'updated_at' => $this->timestamp(),
-            ]);
-        }
+
 
         if ($isAvailable && Schema::hasTable($tableName)) {
             $record = DB::table($tableName)
@@ -229,6 +241,13 @@ class FormationController extends Controller
 
             if ($record) {
                 return $record->id;
+            }
+
+            if ($update) {
+                return DB::table($tableName)->insertGetId([
+                    $attr => $value,
+                    'updated_at' => $this->timestamp(),
+                ]);
             }
 
             return DB::table($tableName)->insertGetId([
@@ -264,14 +283,14 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select(['formations.*', 'categories.categorie', 'domaines.abbr', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'])
+            ->select($this->sqlQuery)
             ->orderBy($column, $direction)
             ->limit(20)
             ->get();
 
-        return $this->success([
-            'formations' => FormationResource::collection($formations),
-        ]);
+        return $this->success(
+            FormationResource::collection($formations)
+        );
     }
 
     /**
@@ -298,11 +317,9 @@ class FormationController extends Controller
             ->pluck('code_domaine');
 
         return $this->success([
-            'commonValues' => [
-                'intitules' => $intitules,
-                'organismes' => $organismes,
-                'code_domaines' => $code_domaines,
-            ]
+            'intitules' => $intitules,
+            'organismes' => $organismes,
+            'code_domaines' => $code_domaines,
         ]);
     }
 }

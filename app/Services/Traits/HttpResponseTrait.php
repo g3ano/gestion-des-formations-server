@@ -6,7 +6,9 @@ trait HttpResponseTrait
 {
     public function success($data = [], $status = 200)
     {
-        return response()->json($data, $status);
+        return response()->json([
+            'data' => $data,
+        ], $status);
     }
 
     public function failure($errors, $status = 400)

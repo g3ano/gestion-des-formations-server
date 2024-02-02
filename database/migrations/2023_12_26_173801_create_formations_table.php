@@ -18,16 +18,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // TODO: add constrains to the foreign keys
         Schema::create('formations', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Categorie::class, 'categorie_id');
-            $table->foreignIdFor(Domaine::class, 'domaine_id');
-            $table->foreignIdFor(Type::class, 'type_id');
-            $table->foreignIdFor(Intitule::class, 'intitule_id');
-            $table->foreignIdFor(Organisme::class, 'organisme_id');
-            $table->foreignIdFor(CodeDomaine::class, 'code_domaine_id');
-            $table->foreignIdFor(Cout::class, 'cout_id');
+            $table->foreignIdFor(Categorie::class, 'categorie_id')->constrained('categories');
+            $table->foreignIdFor(Domaine::class, 'domaine_id')->constrained('domaines');
+            $table->foreignIdFor(Type::class, 'type_id')->constrained('types');
+            $table->foreignIdFor(Intitule::class, 'intitule_id')->constrained('intitules');
+            $table->foreignIdFor(Organisme::class, 'organisme_id')->constrained('organismes');
+            $table->foreignIdFor(CodeDomaine::class, 'code_domaine_id')->constrained('code_domaines');
+            $table->foreignIdFor(Cout::class, 'cout_id')->constrained('couts');
             $table->string('structure', 50);
             $table->string('code_formation', 3);
             $table->string('mode', 50);

@@ -23,9 +23,9 @@ class EmployeeController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return $this->success([
-            'employees' => EmployeeResource::collection($employees),
-        ]);
+        return $this->success(
+            EmployeeResource::collection($employees)
+        );
     }
 
     /**
