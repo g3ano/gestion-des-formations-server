@@ -167,17 +167,11 @@ class FormationFilter
     /**
      * Parses the given query string
      * 
-     * query = [
-     *      column => [
-     *          operator => value
-     *      ],
-     *      .
-     *      .
-     *      .
+     * @param Request $request
+     * @return array [
+     *      [column, operator, value],
+     *      ...
      * ]
-     *
-     * @param Request $request request received from client
-     * @return array [[column, operator, value], [column, operator, value], ...]
      **/
     public static function parse(Request $request)
     {
