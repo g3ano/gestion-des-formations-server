@@ -72,15 +72,17 @@ class EmployeeController extends Controller
         if (is_array($ids)) {
             foreach ($ids as $id) {
                 if (isset($id)) {
-                    $rows[] = DB::table('employees')->where('id', '=', $id)->delete();
+                    $rows[] = DB::table('employees')->where('id', $id)->delete();
                 }
             }
         }
 
         if (count($rows) === count($ids)) {
             return $this->success([
-                'message' => 'Employee(s) was deleted successfully',
-                'effected rows' => count($rows),
+                'message' => count($rows) > 1
+                    ? 'Employées ont été supprimés'
+                    : 'Employé a été supprimé.',
+                'effectedRows' => count($rows),
             ]);
         }
         return $this->success([
@@ -90,7 +92,7 @@ class EmployeeController extends Controller
 
     /**
      * Get the current timestamp
-     * 
+     *
      * @return \Illuminate\Support\Carbon
      */
     private function timestamp()

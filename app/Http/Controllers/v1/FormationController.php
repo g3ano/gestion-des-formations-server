@@ -20,8 +20,9 @@ class FormationController extends Controller
         'formations.*', 'categories.categorie', 'domaines.abbr as domaine', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'
     ];
 
-    public function index()
+    public function index(Request $request)
     {
+        $filters = FormationFilter::parse($request);
         $formations = DB::table('formations')
             ->join('categories', 'formations.categorie_id', '=', 'categories.id')
             ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
@@ -31,8 +32,8 @@ class FormationController extends Controller
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
             ->select($this->sqlQuery)
-            ->orderBy('created_at', 'desc')
-            ->limit(1500)
+            ->where($filters['query'], null, null, $filters['boolean'])
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         return $this->success(
@@ -104,7 +105,7 @@ class FormationController extends Controller
 
         $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
 
-        $id = DB::table('formations')->insertGetId([
+        $rows = DB::table('formations')->insertGetId([
             ...$data['direct'],
             ...$formationData,
             'created_at' => $this->timestamp(),
@@ -112,7 +113,7 @@ class FormationController extends Controller
         ]);
 
         return $this->success([
-            'formation id' => $id,
+            'effectedRows' => $rows,
         ]);
     }
 
@@ -167,25 +168,26 @@ class FormationController extends Controller
 
         $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
 
-        $rowId = DB::table('formations')->insertGetId([
-            ...$data['direct'],
-            ...$formationData,
-            'updated_at' => $this->timestamp(),
-        ]);
+        $rows = DB::table('formations')
+            ->where('id', $formation->id)
+            ->update([
+                ...$data['direct'],
+                ...$formationData,
+                'updated_at' => $this->timestamp(),
+            ]);
 
-        if ($rowId) {
+        if ($rows) {
             return $this->success([
-                'message' => 'Resource was updated successfully',
-                'rowId' => $rowId,
+                'message' => 'Formation was updated successfully',
+                'effectedRows' => $rows,
             ]);
         }
+        return $this->failure('Some error has happened');
     }
 
     public function destroy(Request $request)
     {
-        $rows = [];
-        $ids = $request->input('ids');
-
+        $rows = []; $ids = $request->input('ids');
 
         if (is_array($ids)) {
             foreach ($ids as $id) {
@@ -197,8 +199,10 @@ class FormationController extends Controller
 
         if (count($rows) === count($ids)) {
             return $this->success([
-                'message' => 'Formation(s) was deleted successfully',
-                'effected rows' => count($rows),
+                'message' => count($rows) > 1
+                    ? 'Formations ont été supprimés'
+                    : 'Formation a été supprimé.',
+                'effectedRows' => count($rows),
             ]);
         }
         return $this->success([
@@ -219,8 +223,8 @@ class FormationController extends Controller
     /**
      * Get the row id if search value is found,
      * if the value doesn't exist create a new record from the value then get id,
-     * `$update` is used to indicate update operation 
-     * 
+     * `$update` is used to indicate update operation
+     *
      * @param string $attr column to search for in the table
      * @param string $value column value
      * @return int|null

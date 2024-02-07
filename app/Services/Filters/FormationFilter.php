@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 
 class FormationFilter
 {
-
     private static $columns = [
         "id" => [
             'eq',
@@ -166,12 +165,9 @@ class FormationFilter
 
     /**
      * Parses the given query string
-     * 
+     *
      * @param Request $request
-     * @return array [
-     *      [column, operator, value],
-     *      ...
-     * ]
+     * @return array [[column, operator, value], ...]
      **/
     public static function parse(Request $request)
     {

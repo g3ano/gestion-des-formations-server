@@ -35,7 +35,6 @@ class DatabaseSeeder extends Seeder
             ['categorie' => 'actions liées au développement des compétences', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-
         DB::table('domaines')->insert([
             ['abbr' => 'fcm', 'domaine' => 'domaine fonction cœurs de métier', 'created_at' => now(), 'updated_at' => now()],
             ['abbr' => 'fst', 'domaine' => 'domaine fonction de soutien', 'created_at' => now(), 'updated_at' => now()],
