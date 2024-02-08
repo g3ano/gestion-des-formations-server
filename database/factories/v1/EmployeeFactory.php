@@ -27,7 +27,7 @@ class EmployeeFactory extends Factory
             'sexe' => $sexe,
             'direction' => fake()->word,
             'csp' => $csp,
-            'date_naissance' => fake()->dateTimeThisYear,
+            'date_naissance' => fake()->date,
             'lieu_naissance' => fake()->address,
             'email' => fake()->safeEmail,
             'matricule' => substr(str_replace('-', '', fake()->uuid), 0, 6),

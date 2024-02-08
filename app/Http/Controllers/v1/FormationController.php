@@ -105,16 +105,20 @@ class FormationController extends Controller
 
         $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
 
-        $rows = DB::table('formations')->insertGetId([
+        $id = DB::table('formations')->insertGetId([
             ...$data['direct'],
             ...$formationData,
             'created_at' => $this->timestamp(),
             'updated_at' => $this->timestamp(),
         ]);
 
-        return $this->success([
-            'effectedRows' => $rows,
-        ]);
+        if ($id) {
+            return $this->success([
+                'effected_row_id' => $id,
+            ]);
+        }
+
+        return $this->failure('An error has happened');
     }
 
     /**
@@ -178,7 +182,7 @@ class FormationController extends Controller
 
         if ($rows) {
             return $this->success([
-                'message' => 'Formation was updated successfully',
+                'message' => 'La formation a été modifieé',
                 'effectedRows' => $rows,
             ]);
         }
@@ -187,7 +191,8 @@ class FormationController extends Controller
 
     public function destroy(Request $request)
     {
-        $rows = []; $ids = $request->input('ids');
+        $rows = [];
+        $ids = $request->input('ids');
 
         if (is_array($ids)) {
             foreach ($ids as $id) {

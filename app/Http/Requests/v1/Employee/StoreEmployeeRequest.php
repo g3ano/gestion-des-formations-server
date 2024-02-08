@@ -28,7 +28,7 @@ class StoreEmployeeRequest extends FormRequest
             'localite' => ['required'],
             'sexe' => ['required', Rule::in(['M', 'F'])],
             'direction' => ['required'],
-            'csp' => ['required', Rule::in(['M', 'C'])],
+            'csp' => ['required', Rule::in(['M', 'C', 'CS'])],
             'date_naissance' => ['required'],
             'lieu_naissance' => ['required'],
             'email' => ['required', 'email', 'max:255', Rule::unique('employees', 'email')],

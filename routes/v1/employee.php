@@ -5,5 +5,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('employees')->group(function () {
     Route::get('/', [EmployeeController::class, 'index']);
+    Route::post('/', [EmployeeController::class, 'store']);
     Route::delete('/', [EmployeeController::class, 'destroy']);
 });

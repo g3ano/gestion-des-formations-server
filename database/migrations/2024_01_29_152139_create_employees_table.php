@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('sexe', 1)->default('M');
             $table->string('direction', 50);
             $table->string('csp', 1);
-            $table->timestamp('date_naissance');
+            $table->date('date_naissance');
             $table->string('lieu_naissance', 255);
             $table->string('email', 255);
             $table->timestamps();

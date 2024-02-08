@@ -8,6 +8,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Models\v1\Employee;
 use App\Services\Traits\HttpResponseTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
@@ -34,15 +35,21 @@ class EmployeeController extends Controller
     public function store(StoreEmployeeRequest $request)
     {
         $data = $request->validated();
+        $data['date_naissance'] = Carbon::parse($data['date_naissance']);
 
         $id = DB::table('employees')->insertGetId([
             ...$data,
             'created_at' => $this->timestamp(),
             'updated_at' => $this->timestamp(),
         ]);
-        return $this->success([
-            'id' => $id,
-        ]);
+
+        if ($id) {
+            return $this->success([
+                'effected_row_id' => $id,
+            ]);
+        }
+
+        return $this->failure('An error has happened');
     }
 
     /**
