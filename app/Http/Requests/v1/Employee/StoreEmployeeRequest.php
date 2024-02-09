@@ -15,6 +15,14 @@ class StoreEmployeeRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'date_naissance' => 'dateNaissance',
+            'lieu_naissance' => 'lieuNaissance',
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

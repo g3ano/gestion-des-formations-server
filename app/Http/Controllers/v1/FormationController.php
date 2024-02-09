@@ -88,6 +88,7 @@ class FormationController extends Controller
          * ]
          */
         $data = $request->validated();
+        return $data;
 
         $formationData = [];
 
@@ -118,7 +119,9 @@ class FormationController extends Controller
             ]);
         }
 
-        return $this->failure('An error has happened');
+        return $this->failure([
+            'message' => 'An error has happened',
+        ]);
     }
 
     /**
@@ -186,7 +189,9 @@ class FormationController extends Controller
                 'effectedRows' => $rows,
             ]);
         }
-        return $this->failure('Some error has happened');
+        return $this->failure([
+            'message' => 'An error has happened',
+        ]);
     }
 
     public function destroy(Request $request)
@@ -328,7 +333,7 @@ class FormationController extends Controller
         return $this->success([
             'intitules' => $intitules,
             'organismes' => $organismes,
-            'code_domaines' => $code_domaines,
+            'codeDomaines' => $code_domaines,
         ]);
     }
 }

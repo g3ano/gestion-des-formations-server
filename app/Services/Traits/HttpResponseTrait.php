@@ -11,10 +11,10 @@ trait HttpResponseTrait
         ], $status);
     }
 
-    public function failure($errors, $status = 400)
+    public function failure(array $errors, $status = 400)
     {
         return response()->json([
-            'error' => $errors,
+            'errors' => $errors,
         ], $status);
     }
 }

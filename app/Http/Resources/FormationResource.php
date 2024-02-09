@@ -7,12 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class FormationResource extends JsonResource
 {
-
-    public function with(Request $request)
-    {
-        return ['resolve' => []];
-    }
-
     /**
      * Transform the resource into an array.
      *
@@ -25,14 +19,14 @@ class FormationResource extends JsonResource
             'formation' => [
                 "id" => $this->id,
                 "structure" => $this->structure,
-                "code_formation" => $this->code_formation,
+                "codeFormation" => $this->code_formation,
                 "mode" => $this->mode,
                 "lieu" => $this->lieu,
                 "effectif" => $this->effectif,
                 "durree" => $this->durree,
-                "h_j" => $this->h_j,
+                "HJ" => $this->h_j,
                 "observation" => $this->observation ? $this->observation : '',
-                "created_at" => date('Y-m-d', strtotime($this->created_at)),
+                "createdAt" => date('Y-m-d', strtotime($this->created_at)),
             ],
             'relationships' => [
                 'intitule' => [
@@ -43,9 +37,9 @@ class FormationResource extends JsonResource
                     "id" => $this->organisme_id,
                     "organisme" => $this->organisme,
                 ],
-                'code_domaine' => [
+                'codeDomaine' => [
                     "id" => $this->code_domaine_id,
-                    "code_domaine" => $this->code_domaine,
+                    "codeDomaine" => $this->code_domaine,
                 ],
                 "categorie" => [
                     'id' => $this->categorie_id,
@@ -62,11 +56,11 @@ class FormationResource extends JsonResource
                 'couts' =>  [
                     "id" => $this->cout_id,
                     "pedagogiques" => $this->pedagogiques,
-                    "hebergement_restauration" => $this->hebergement_restauration,
+                    "hebergementRestauration" => $this->hebergement_restauration,
                     "transport" => $this->transport,
                     "presalaire" => $this->presalaire,
-                    "autres_charges" => $this->autres_charges,
-                    "dont_devise" => $this->dont_devise,
+                    "autresCharges" => $this->autres_charges,
+                    "dontDevise" => $this->dont_devise,
                 ],
             ]
         ];
