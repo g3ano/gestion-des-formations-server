@@ -5,7 +5,7 @@ namespace App\Http\Requests\v1\Formation;
 use App\Http\Requests\v1\LocalBaseRequest;
 use Illuminate\Validation\Rule;
 
-class StoreFormationRequest extends LocalBaseRequest
+class UpdateFormationRequest extends LocalBaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -48,10 +48,12 @@ class StoreFormationRequest extends LocalBaseRequest
     public function rules(): array
     {
         return [
-            'direct.code_formation' => ['bail', 'required', 'max:3', Rule::in([
-                'CDI', 'CDA', 'CDE', 'LDI', 'LDA', 'LDE',
-                'cdi', 'cda', 'cde', 'ldi', 'lda', 'lde'
-            ])],
+            'direct.code_formation' => [
+                'bail', 'required', 'max:3', Rule::in([
+                    'CDI', 'CDA', 'CDE', 'LDI', 'LDA', 'LDE',
+                    'cdi', 'cda', 'cde', 'ldi', 'lda', 'lde'
+                ])
+            ],
             'direct.structure' => ['bail', 'required'],
             'direct.mode' => ['bail', 'required'],
             'direct.lieu' => ['bail', 'required'],

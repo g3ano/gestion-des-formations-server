@@ -6,9 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
 
-trait ValidationFormatTrait
+trait FormatRequest
 {
-
     /**
      * Formats the coming request data
      * @return array
@@ -29,7 +28,7 @@ trait ValidationFormatTrait
     }
 
     /**
-     * Align `MessageBag` assosiated with the current `Validator` instance,
+     * Align `MessageBag` associated with the current `Validator` instance,
      * to json response conventions
      * @return array
      */
@@ -55,10 +54,10 @@ trait ValidationFormatTrait
             if (count($parsedKey) !== 1) {
                 $parent = array_shift($parsedKey);
                 foreach ($parsedKey as $value) {
-                    $result[$parent][$value] = $errorMessages;
+                    $result[$parent][$value] = $errorMessages[0];
                 }
             } else {
-                $result[$formattedField] = $errorMessages;
+                $result[$formattedField] = $errorMessages[0];
             }
         }
         return $result;

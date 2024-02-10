@@ -3,22 +3,34 @@
 namespace App\Http\Controllers\v1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\v1\Employee\UpdateFormationRequest;
+use App\Http\Requests\v1\Formation\UpdateFormationRequest;
 use App\Http\Requests\v1\Formation\StoreFormationRequest;
 use App\Http\Resources\FormationResource;
 use App\Services\Filters\FormationFilter;
-use App\Services\Traits\HttpResponseTrait;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class FormationController extends Controller
 {
-    use HttpResponseTrait;
-
-    private $sqlQuery = [
-        'formations.*', 'categories.categorie', 'domaines.abbr as domaine', 'types.type', 'intitules.intitule', 'organismes.organisme', 'code_domaines.code_domaine', 'couts.pedagogiques', 'couts.hebergement_restauration', 'couts.transport', 'couts.presalaire', 'couts.autres_charges', 'couts.dont_devise'
+    private $sql = [
+        'formations.*',
+        'categories.categorie',
+        'domaines.abbr as domaine',
+        'types.type',
+        'intitules.intitule',
+        'organismes.organisme',
+        'code_domaines.code_domaine',
+        'couts.pedagogiques',
+        'couts.hebergement_restauration',
+        'couts.transport',
+        'couts.presalaire',
+        'couts.autres_charges',
+        'couts.dont_devise'
     ];
+
 
     public function index(Request $request)
     {
@@ -31,7 +43,7 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select($this->sqlQuery)
+            ->select($this->sql)
             ->where($filters['query'], null, null, $filters['boolean'])
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -51,9 +63,15 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select($this->sqlQuery)
+            ->select($this->sql)
             ->where('formations.id', $id)
             ->first();
+
+        if (!$formation) {
+            return $this->failure([
+                'message' => 'La Formation n\'est pas trouvé',
+            ]);
+        }
 
         return $this->success(FormationResource::make($formation));
     }
@@ -88,7 +106,6 @@ class FormationController extends Controller
          * ]
          */
         $data = $request->validated();
-        return $data;
 
         $formationData = [];
 
@@ -104,7 +121,7 @@ class FormationController extends Controller
             'updated_at' => $this->timestamp(),
         ]);
 
-        $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
+        $formationData['h_j'] = (float) $data['direct']['effectif'] * (float) $data['direct']['durree'];
 
         $id = DB::table('formations')->insertGetId([
             ...$data['direct'],
@@ -115,12 +132,13 @@ class FormationController extends Controller
 
         if ($id) {
             return $this->success([
-                'effected_row_id' => $id,
+                'message' => 'La Formation est crée',
+                'effectedRowId' => $id,
             ]);
         }
 
         return $this->failure([
-            'message' => 'An error has happened',
+            'message' => 'Error, La formation n\'est pas crée',
         ]);
     }
 
@@ -137,9 +155,17 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select($this->sqlQuery)
+            ->select($this->sql)
             ->where('formations.id', $id)
             ->first();
+
+        if (!$formation) {
+            throw new HttpResponseException(
+                $this->failure([
+                    'message' => 'La Formation n\'est pas trouvé',
+                ], 404)
+            );
+        }
 
         $data = $request->validated();
 
@@ -169,31 +195,38 @@ class FormationController extends Controller
             $attrWithId = $attr . '_id';
 
             $formationData[$attrWithId] = $value !== $attrOldValue
-                ? $this->getId($attr, $value, true)
+                ? $this->getId($attr, $value)
                 : $formation->$attrWithId;
         }
 
         $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
+        $formationData['h_j'] = $data['direct']['effectif'] * $data['direct']['durree'];
+        $formationData['updated_at'] = $this->timestamp();
+
 
         $rows = DB::table('formations')
             ->where('id', $formation->id)
             ->update([
                 ...$data['direct'],
                 ...$formationData,
-                'updated_at' => $this->timestamp(),
             ]);
 
         if ($rows) {
             return $this->success([
-                'message' => 'La formation a été modifieé',
+                'message' => 'La formation a été modifiée',
                 'effectedRows' => $rows,
             ]);
         }
+
         return $this->failure([
-            'message' => 'An error has happened',
+            'message' => 'Error, La formation n\'est pas modifiée',
         ]);
     }
 
+    /**
+     * Removes the specified resource(s)
+     * @return array
+     */
     public function destroy(Request $request)
     {
         $rows = [];
@@ -201,13 +234,19 @@ class FormationController extends Controller
 
         if (is_array($ids)) {
             foreach ($ids as $id) {
-                if (isset($id)) {
-                    $rows[] = DB::table('formations')->where('id', '=', $id)->delete();
+                if ($id) {
+                    $row = DB::table('formations')
+                        ->where('id', $id)
+                        ->delete();
+
+                    if ($row) {
+                        $rows[] = $row;
+                    }
                 }
             }
         }
 
-        if (count($rows) === count($ids)) {
+        if (count($rows)) {
             return $this->success([
                 'message' => count($rows) > 1
                     ? 'Formations ont été supprimés'
@@ -215,8 +254,13 @@ class FormationController extends Controller
                 'effectedRows' => count($rows),
             ]);
         }
-        return $this->success([
-            'message' => 'Some error has occurred',
+
+        $message = 'Provided ' .
+            (count($ids) > 1 ? 'ids' : 'id') . ' doesn\'t match any record';
+
+        return $this->failure([
+            'message' => $message,
+            'effectedRows' => count($rows),
         ]);
     }
 
@@ -227,19 +271,17 @@ class FormationController extends Controller
      */
     private function timestamp()
     {
-        return now();
+        return Carbon::now();
     }
 
     /**
      * Get the row id if search value is found,
      * if the value doesn't exist create a new record from the value then get id,
-     * `$update` is used to indicate update operation
-     *
      * @param string $attr column to search for in the table
      * @param string $value column value
      * @return int|null
      **/
-    private function getId(string $attr, string $value, bool $update = false)
+    private function getId(string $attr, string $value)
     {
         $tables = ['intitules', 'code_domaines', 'organismes'];
         $tableName = strtolower(trim($attr)) . 's';
@@ -255,13 +297,6 @@ class FormationController extends Controller
 
             if ($record) {
                 return $record->id;
-            }
-
-            if ($update) {
-                return DB::table($tableName)->insertGetId([
-                    $attr => $value,
-                    'updated_at' => $this->timestamp(),
-                ]);
             }
 
             return DB::table($tableName)->insertGetId([
@@ -297,7 +332,7 @@ class FormationController extends Controller
             ->join('organismes', 'formations.organisme_id', '=', 'organismes.id')
             ->join('code_domaines', 'formations.code_domaine_id', '=', 'code_domaines.id')
             ->join('couts', 'formations.cout_id', '=', 'couts.id')
-            ->select($this->sqlQuery)
+            ->select($this->sql)
             ->orderBy($column, $direction)
             ->limit(20)
             ->get();
@@ -311,7 +346,6 @@ class FormationController extends Controller
      * Get common values for the formation.
      * **PS:** common values are values that can be found in multiple formations,
      *  they also could be unique to only one formation
-     *
      * @return array
      **/
     public function getCommonValues()

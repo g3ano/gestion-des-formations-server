@@ -4,16 +4,15 @@ namespace App\Http\Controllers\v1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\v1\Employee\StoreEmployeeRequest;
+use App\Http\Requests\v1\Employee\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
-use App\Models\v1\Employee;
-use App\Services\Traits\HttpResponseTrait;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
-    use HttpResponseTrait;
     /**
      * Display a listing of the resource.
      */
@@ -35,7 +34,7 @@ class EmployeeController extends Controller
     public function store(StoreEmployeeRequest $request)
     {
         $data = $request->validated();
-        $data['date_naissance'] = Carbon::parse($data['date_naissance']);
+        $data['date_naissance'] = new Carbon($data['date_naissance']);
 
         $id = DB::table('employees')->insertGetId([
             ...$data,
@@ -45,27 +44,73 @@ class EmployeeController extends Controller
 
         if ($id) {
             return $this->success([
-                'effected_row_id' => $id,
+                'message' => 'L\'Employee est crée',
+                'effectedRowId' => $id,
             ]);
         }
 
-        return $this->failure('An error has happened');
+        return $this->failure([
+            'message' => 'L\'Employée n\'est pas crée',
+        ]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Employee $employee)
+    public function show(string $id)
     {
-        //
+        $employee = DB::table('employees')
+            ->select()
+            ->where('id', $id)
+            ->first();
+
+        if (!$employee) {
+            return $this->failure([
+                'message' => 'L\'Employée n\'est pas trouvé',
+            ], 404);
+        }
+
+        return $this->success(
+            EmployeeResource::make($employee)
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Employee $employee)
+    public function update(UpdateEmployeeRequest $request, string $id)
     {
-        //
+        $employee = DB::table('employees')
+            ->select()
+            ->where('id', $id)
+            ->first();
+
+        if (!$employee) {
+            throw new HttpResponseException(
+                $this->failure([
+                    'message' => 'L\'Employée n\'est pas trouvé',
+                ], 404)
+            );
+        }
+
+        $data = $request->validated();
+        $data['updated_at'] = $this->timestamp();
+
+        $row = DB::table('employees')
+            ->select()
+            ->where('id', $id)
+            ->update($data);
+
+        if ($row) {
+            return $this->success([
+                'message' => 'L\'Employée est modifiée',
+                'effectedRow' => $row,
+            ]);
+        }
+
+        return $this->failure([
+            'message' => 'Error, L\'Employée n\'est pas modifiée',
+        ]);
     }
 
     /**
@@ -78,13 +123,19 @@ class EmployeeController extends Controller
 
         if (is_array($ids)) {
             foreach ($ids as $id) {
-                if (isset($id)) {
-                    $rows[] = DB::table('employees')->where('id', $id)->delete();
+                if ($id) {
+                    $row = DB::table('employees')
+                        ->where('id', $id)
+                        ->delete();
+
+                    if ($row) {
+                        $rows[] = $row;
+                    }
                 }
             }
         }
 
-        if (count($rows) === count($ids)) {
+        if (count($rows)) {
             return $this->success([
                 'message' => count($rows) > 1
                     ? 'Employées ont été supprimés'
@@ -92,8 +143,13 @@ class EmployeeController extends Controller
                 'effectedRows' => count($rows),
             ]);
         }
-        return $this->success([
-            'message' => 'Some error has occurred',
+
+        $message = 'Provided ' .
+            (count($ids) > 1 ? 'ids' : 'id') . ' doesn\'t match any record';
+
+        return $this->failure([
+            'message' => $message,
+            'effectedRows' => count($rows),
         ]);
     }
 
@@ -104,6 +160,6 @@ class EmployeeController extends Controller
      */
     private function timestamp()
     {
-        return now();
+        return Carbon::now();
     }
 }

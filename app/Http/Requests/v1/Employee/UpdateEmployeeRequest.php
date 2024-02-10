@@ -5,7 +5,7 @@ namespace App\Http\Requests\v1\Employee;
 use App\Http\Requests\v1\LocalBaseRequest;
 use Illuminate\Validation\Rule;
 
-class StoreEmployeeRequest extends LocalBaseRequest
+class UpdateEmployeeRequest extends LocalBaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,8 +18,8 @@ class StoreEmployeeRequest extends LocalBaseRequest
     public function attributes()
     {
         return [
-            'date_naissance' => 'date naissance',
-            'lieu_naissance' => 'lieu naissance',
+            'date_naissance' => 'date de naissance',
+            'lieu_naissance' => 'lieu de naissance',
         ];
     }
 
@@ -33,14 +33,18 @@ class StoreEmployeeRequest extends LocalBaseRequest
         return [
             'nom' => ['bail', 'required', 'max:255', Rule::unique('employees', 'nom')],
             'prenom' => ['bail', 'required', 'max:255', Rule::unique('employees', 'prenom')],
-            'localite' => ['bail', 'required', 'max:50'],
             'sexe' => ['bail', 'required', Rule::in(['M', 'F'])],
-            'direction' => ['bail', 'required', 'max:50'],
             'csp' => ['bail', 'required', Rule::in(['M', 'C', 'CS'])],
-            'date_naissance' => ['bail', 'required'],
-            'lieu_naissance' => ['bail', 'required', 'max:255'],
-            'email' => ['bail', 'required', 'email', 'max:255', Rule::unique('employees', 'email')],
-            'matricule' => ['bail', 'required', 'string', Rule::unique('employees', 'matricule')]
+            'localite' => ['bail', 'required', 'max:50'],
+            'direction' => ['bail', 'required', 'max:50'],
+            'date_naissance' => ['bail', 'required', 'string'],
+            'lieu_naissance' => ['bail', 'required', 'string', 'max:255'],
+            'email' => [
+                'bail', 'required', 'email', 'max:255', Rule::unique('employees', 'email')
+            ],
+            'matricule' => [
+                'bail', 'required', 'string', Rule::unique('employees', 'matricule')
+            ]
         ];
     }
 }

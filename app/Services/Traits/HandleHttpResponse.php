@@ -2,7 +2,7 @@
 
 namespace App\Services\Traits;
 
-trait HttpResponseTrait
+trait HandleHttpResponse
 {
     public function success($data = [], $status = 200)
     {

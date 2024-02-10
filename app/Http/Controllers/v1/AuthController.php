@@ -5,17 +5,12 @@ namespace App\Http\Controllers\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\v1\Auth\RegisterRequest;
 use App\Models\User;
-use App\Services\Traits\HttpResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-
-    use HttpResponseTrait;
-
-
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -24,7 +19,9 @@ class AuthController extends Controller
         ]);
 
         if (!auth()->attempt($credentials)) {
-            return $this->failure('Your Password is incorrect, please enter the correct  password', 422);
+            return $this->failure([
+                'message' => 'Your Password is incorrect, please try again'
+            ], 422);
         }
 
         $tokens = DB::table('personal_access_tokens')
