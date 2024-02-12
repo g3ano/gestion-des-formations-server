@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\v1;
 
 use App\Http\Resources\v1\ActionResource;
+use App\Http\Resources\v1\CoutResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,13 +31,13 @@ class FormationResource extends JsonResource
                 "createdAt" => date('Y-m-d', strtotime($this->created_at)),
             ],
             'relationships' => [
-                'intitule' => $this->whenLoaded('intitule'),
-                "organisme" => $this->whenLoaded('organisme'),
-                "codeDomaine" => $this->whenLoaded('code_domaine'),
-                'categorie' => $this->whenLoaded('categorie'),
-                "domaine" => $this->whenLoaded('domaine'),
-                "type" => $this->whenLoaded('type'),
-                'couts' =>  $this->whenLoaded('cout'),
+                'intitule' => IntituleResource::make($this->whenLoaded('intitule')),
+                "organisme" => OrganismeResource::make($this->whenLoaded('organisme')),
+                "codeDomaine" => CodeDomaineResource::make($this->whenLoaded('code_domaine')),
+                'categorie' => CategorieResource::make($this->whenLoaded('categorie')),
+                "domaine" => DomaineResource::make($this->whenLoaded('domaine')),
+                "type" => TypeResource::make($this->whenLoaded('type')),
+                'couts' =>  CoutResource::make($this->whenLoaded('cout')),
                 'actions' =>  ActionResource::collection(
                     $this->whenLoaded('actions')
                 ),

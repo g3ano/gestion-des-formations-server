@@ -5,10 +5,9 @@ namespace App\Http\Controllers\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\v1\Formation\UpdateFormationRequest;
 use App\Http\Requests\v1\Formation\StoreFormationRequest;
-use App\Http\Resources\FormationResource;
+use App\Http\Resources\v1\FormationResource;
 use App\Models\v1\Cout;
 use App\Models\v1\Formation;
-use App\Services\Filters\FormationFilter;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -17,8 +16,7 @@ use Illuminate\Support\Facades\Schema;
 
 class FormationController extends Controller
 {
-
-    public $relationships = [
+    protected $relationships = [
         'cout',
         'domaine',
         'code_domaine',
@@ -31,30 +29,28 @@ class FormationController extends Controller
 
     public function index(Request $request)
     {
-        $filters = FormationFilter::parse($request);
-        $formations = Formation::with($this->relationships)
-            ->where($filters['query'])
-            ->paginate(10);
+        $includedRelations = $this->includeRelations($request);
+        $formations = Formation::with($includedRelations)->get();
 
-
-        if (!$formations->isEmpty()) {
+        if (!$formations) {
             throw new HttpResponseException(
                 $this->failure([
                     'message' => 'Pas des formations trouvées',
                 ], 404)
             );
         }
-
         return $this->success(
             FormationResource::collection($formations)
         );
     }
 
-    public function show(string $id)
+    public function show(string $id, Request $request)
     {
-        $formation = Formation::with($this->relationships)->where('id', $id)->first();
+        $includedRelations = $this->includeRelations($request);
+        return $includedRelations;
+        $formation = Formation::with($includedRelations)->where('id', $id)->first();
 
-        if (!$formation) {
+        if ($formation) {
             return $this->success(FormationResource::make($formation));
         }
 
@@ -132,7 +128,7 @@ class FormationController extends Controller
      */
     public function update(UpdateFormationRequest $request, string $id)
     {
-        $formation = Formation::where('id', $id)->first();
+        $formation = Formation::with(array_diff($this->relationships, ['actions']))->where('id', $id)->first();
 
         if (!$formation) {
             throw new HttpResponseException(
@@ -163,12 +159,12 @@ class FormationController extends Controller
         }
 
         foreach ($data['common'] as $attr => $value) {
-            $attrOldValue = $formation->$attr;
+            $attrOldValue = $formation->$attr->$attr;
             $attrWithId = $attr . '_id';
 
-            $formationData[$attrWithId] = $value !== $attrOldValue
-                ? $this->getId($attr, $value)
-                : $formation->$attrWithId;
+            if ($attrOldValue !== $value) {
+                $formationData[$attrWithId] = $this->getId($attr, $value);
+            }
         }
 
         $formationData['h_j'] =
@@ -187,9 +183,11 @@ class FormationController extends Controller
             ]);
         }
 
-        return $this->failure([
-            'message' => 'Nous n\'avons pas pu effectuer l\'action.',
-        ]);
+        throw new HttpResponseException(
+            $this->failure([
+                'message' => 'Nous n\'avons pas pu effectuer l\'action.',
+            ])
+        );
     }
 
     /**
@@ -201,26 +199,14 @@ class FormationController extends Controller
         $rows = [];
         $ids = $request->input('ids');
 
-        if (is_array($ids)) {
-            foreach ($ids as $id) {
-                if ($id) {
-                    $row = DB::table('formations')
-                        ->where('id', $id)
-                        ->delete();
+        $rows = Formation::destroy($ids);
 
-                    if ($row) {
-                        $rows[] = $row;
-                    }
-                }
-            }
-        }
-
-        if (count($rows)) {
+        if ($rows) {
             return $this->success([
-                'message' => count($rows) > 1
+                'message' => $rows > 1
                     ? 'Formations ont été supprimés'
                     : 'Formation a été supprimé.',
-                'effectedRows' => count($rows),
+                'effectedRows' => $rows,
             ]);
         }
 

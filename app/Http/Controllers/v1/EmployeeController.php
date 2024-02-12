@@ -5,21 +5,25 @@ namespace App\Http\Controllers\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\v1\Employee\StoreEmployeeRequest;
 use App\Http\Requests\v1\Employee\UpdateEmployeeRequest;
-use App\Http\Resources\EmployeeResource;
+use App\Http\Resources\v1\EmployeeResource;
 use App\Models\v1\Employee;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
+    protected $relationships = [
+        'actions',
+    ];
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $employees = Employee::with('actions')->get();
+        $includedRelations = $this->includeRelations($request);
+        $employees = Employee::with($includedRelations)->get();
 
         if ($employees) {
             return $this->success(
@@ -61,9 +65,10 @@ class EmployeeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id, Request $request)
     {
-        $employee = Employee::with('actions')
+        $includedRelations = $this->includeRelations($request);
+        $employee = Employee::with($includedRelations)
             ->where('id', $id)
             ->first();
 
@@ -83,9 +88,7 @@ class EmployeeController extends Controller
      */
     public function update(UpdateEmployeeRequest $request, string $id)
     {
-        $employee = DB::table('employees')
-            ->select()
-            ->where('id', $id)
+        $employee = Employee::where('id', $id)
             ->first();
 
         if (!$employee) {
@@ -97,23 +100,22 @@ class EmployeeController extends Controller
         }
 
         $data = $request->validated();
-        $data['updated_at'] = $this->timestamp();
 
-        $row = DB::table('employees')
-            ->select()
-            ->where('id', $id)
+        $status = Employee::where('id', $id)
             ->update($data);
 
-        if ($row) {
+        if ($status) {
             return $this->success([
                 'message' => 'L\'Employée est modifiée',
-                'effectedRow' => $row,
+                'employeeId' => $employee->id,
             ]);
         }
 
-        return $this->failure([
-            'message' => 'Nous n\'avons pas pu effectuer cette action',
-        ]);
+        throw new HttpResponseException(
+            $this->failure([
+                'message' => 'Nous n\'avons pas pu effectuer cette action',
+            ])
+        );
     }
 
     /**
@@ -124,26 +126,14 @@ class EmployeeController extends Controller
         $rows = [];
         $ids = $request->input('ids');
 
-        if (is_array($ids)) {
-            foreach ($ids as $id) {
-                if ($id) {
-                    $row = DB::table('employees')
-                        ->where('id', $id)
-                        ->delete();
+        $rows = Employee::destroy($ids);
 
-                    if ($row) {
-                        $rows[] = $row;
-                    }
-                }
-            }
-        }
-
-        if (count($rows)) {
+        if ($rows) {
             return $this->success([
-                'message' => count($rows) > 1
+                'message' => $rows > 1
                     ? 'Employées ont été supprimés'
                     : 'Employé a été supprimé.',
-                'effectedRows' => count($rows),
+                'effectedRows' => $rows,
             ]);
         }
 
@@ -152,15 +142,5 @@ class EmployeeController extends Controller
                 'message' => 'Aucun résultat correspondant n\'a été trouvé',
             ], 404),
         );
-    }
-
-    /**
-     * Get the current timestamp
-     *
-     * @return \Illuminate\Support\Carbon
-     */
-    private function timestamp()
-    {
-        return Carbon::now();
     }
 }

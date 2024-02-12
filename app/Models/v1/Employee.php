@@ -10,7 +10,7 @@ class Employee extends Model
 {
     use HasFactory;
 
-    //TODO: use the safest fillable property instead
+    // TODO: use the fillable property instead
     protected $guarded = [];
 
     public function actions(): BelongsToMany

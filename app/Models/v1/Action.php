@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Action extends Model
 {
     use HasFactory;
+
+    // TODO: use the fillable property instead
     protected $guarded = [];
 
     public function employees(): BelongsToMany

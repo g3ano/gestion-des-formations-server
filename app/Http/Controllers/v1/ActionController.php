@@ -18,20 +18,6 @@ class ActionController extends Controller
         'employees'
     ];
 
-    private function includeRelations(Request $request)
-    {
-        $included = [];
-        $query = $request->query('include');
-        if (is_array($query) && !empty($query)) {
-            foreach ($this->relationships as $relationship) {
-                if (in_array($relationship, $query)) {
-                    $included[] = $relationship;
-                }
-            }
-        }
-        return $included;
-    }
-
     /**
      * Display a listing of the resource.
      */
@@ -135,10 +121,16 @@ class ActionController extends Controller
 
         if ($status) {
             return $this->success([
-                'status' => 'successful',
-                'action' => ActionResource::make($action),
+                'message' => 'L\'Action est modifiée',
+                'actionId' => $action->id,
             ]);
         }
+
+        throw new HttpResponseException(
+            $this->failure([
+                'message' => 'Nous n\'avons pas pu effectuer cette action',
+            ])
+        );
     }
 
     /**
@@ -154,7 +146,9 @@ class ActionController extends Controller
 
         if ($rows) {
             return $this->success([
-                'message' => 'L\'action a été supprimée avec succès.',
+                'message' => $rows > 1
+                    ? 'Employées ont été supprimés'
+                    : 'Employé a été supprimé.',
                 'effectedRows' => $rows,
             ]);
         }

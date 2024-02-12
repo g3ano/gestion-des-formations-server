@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\v1;
 
 use App\Http\Resources\v1\ActionResource;
 use Illuminate\Http\Request;
@@ -24,11 +24,11 @@ class EmployeeResource extends JsonResource
                 'sexe' => $this->sexe,
                 'direction' => $this->direction,
                 'csp' => $this->csp,
-                'date_naissance' => date('Y-m-d', strtotime($this->date_naissance)),
-                'lieu_naissance' => $this->lieu_naissance,
+                'dateNaissance' => date('Y-m-d', strtotime($this->date_naissance)),
+                'lieuNaissance' => $this->lieu_naissance,
                 'email' => $this->email,
                 'matricule' => $this->matricule,
-                'created_at' => date('Y-m-d', strtotime($this->created_at)),
+                'createdAt' => date('Y-m-d', strtotime($this->created_at)),
             ],
             'relationships' => [
                 'actions' => ActionResource::collection(
