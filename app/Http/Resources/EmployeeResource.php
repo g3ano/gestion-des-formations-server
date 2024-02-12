@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\v1\ActionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,7 +30,11 @@ class EmployeeResource extends JsonResource
                 'matricule' => $this->matricule,
                 'created_at' => date('Y-m-d', strtotime($this->created_at)),
             ],
-            'relationships' => []
+            'relationships' => [
+                'actions' => ActionResource::collection(
+                    $this->whenLoaded('actions')
+                ),
+            ],
         ];
     }
 }

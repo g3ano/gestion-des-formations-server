@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\v1\Employee\StoreEmployeeRequest;
 use App\Http\Requests\v1\Employee\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
+use App\Models\v1\Employee;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,13 +19,18 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = DB::table('employees')
-            ->select()
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $employees = Employee::with('actions')->get();
 
-        return $this->success(
-            EmployeeResource::collection($employees)
+        if ($employees) {
+            return $this->success(
+                EmployeeResource::collection($employees),
+            );
+        }
+
+        throw new HttpResponseException(
+            $this->failure([
+                'message' => 'Aucun Employees correspondant n\'a été trouvé',
+            ], 404)
         );
     }
 
@@ -36,22 +42,20 @@ class EmployeeController extends Controller
         $data = $request->validated();
         $data['date_naissance'] = new Carbon($data['date_naissance']);
 
-        $id = DB::table('employees')->insertGetId([
-            ...$data,
-            'created_at' => $this->timestamp(),
-            'updated_at' => $this->timestamp(),
-        ]);
+        $employee = Employee::create($data);
 
-        if ($id) {
+        if ($employee) {
             return $this->success([
-                'message' => 'L\'Employee est crée',
-                'effectedRowId' => $id,
+                'message' => 'L\'Employee a été ajoutée avec succès',
+                'employeeId' => $employee->id,
             ]);
         }
 
-        return $this->failure([
-            'message' => 'L\'Employée n\'est pas crée',
-        ]);
+        throw new HttpResponseException(
+            $this->failure([
+                'message' => 'Nous n\'avons pas pu effectuer cette action',
+            ])
+        );
     }
 
     /**
@@ -59,14 +63,13 @@ class EmployeeController extends Controller
      */
     public function show(string $id)
     {
-        $employee = DB::table('employees')
-            ->select()
+        $employee = Employee::with('actions')
             ->where('id', $id)
             ->first();
 
         if (!$employee) {
             return $this->failure([
-                'message' => 'L\'Employée n\'est pas trouvé',
+                'message' => 'L\'Employée n\'est pas trouvée',
             ], 404);
         }
 
@@ -88,7 +91,7 @@ class EmployeeController extends Controller
         if (!$employee) {
             throw new HttpResponseException(
                 $this->failure([
-                    'message' => 'L\'Employée n\'est pas trouvé',
+                    'message' => 'L\'Employée n\'est pas trouvée',
                 ], 404)
             );
         }
@@ -109,7 +112,7 @@ class EmployeeController extends Controller
         }
 
         return $this->failure([
-            'message' => 'Error, L\'Employée n\'est pas modifiée',
+            'message' => 'Nous n\'avons pas pu effectuer cette action',
         ]);
     }
 
@@ -144,13 +147,11 @@ class EmployeeController extends Controller
             ]);
         }
 
-        $message = 'Provided ' .
-            (count($ids) > 1 ? 'ids' : 'id') . ' doesn\'t match any record';
-
-        return $this->failure([
-            'message' => $message,
-            'effectedRows' => count($rows),
-        ]);
+        throw new HttpResponseException(
+            $this->failure([
+                'message' => 'Aucun résultat correspondant n\'a été trouvé',
+            ], 404),
+        );
     }
 
     /**

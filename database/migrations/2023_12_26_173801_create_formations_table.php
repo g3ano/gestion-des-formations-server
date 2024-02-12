@@ -25,7 +25,8 @@ return new class extends Migration
             $table->foreignIdFor(Type::class, 'type_id')->constrained('types');
             $table->foreignIdFor(Intitule::class, 'intitule_id')->constrained('intitules');
             $table->foreignIdFor(Organisme::class, 'organisme_id')->constrained('organismes');
-            $table->foreignIdFor(CodeDomaine::class, 'code_domaine_id')->constrained('code_domaines');
+            $table->foreignIdFor(CodeDomaine::class, 'code_domaine_id')
+                ->constrained('code_domaines');
             $table->foreignIdFor(Cout::class, 'cout_id')->constrained('couts');
             $table->string('structure', 50);
             $table->string('code_formation', 3);

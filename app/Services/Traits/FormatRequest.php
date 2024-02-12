@@ -3,6 +3,7 @@
 namespace App\Services\Traits;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
 
@@ -12,14 +13,12 @@ trait FormatRequest
      * Formats the coming request data
      * @return array
      */
-    public function formatPreValidation(Request $request)
+    public function formatPreValidation(array $arr)
     {
         $formattedFields = [];
-        foreach ($request->all() as $key => $value) {
-            if (is_array($value)) {
-                foreach ($value as $inner => $innerValue) {
-                    $formattedFields[Str::snake($key)][Str::snake($inner)] = $innerValue;
-                }
+        foreach ($arr as $key => $value) {
+            if (!empty($value) && is_array($value)) {
+                $formattedFields[Str::snake($key)] = $this->formatPreValidation($value);
             } else {
                 $formattedFields[Str::snake($key)] = $value;
             }
@@ -28,18 +27,13 @@ trait FormatRequest
     }
 
     /**
-     * Align `MessageBag` associated with the current `Validator` instance,
-     * to json response conventions
+     * Expands the flat array given to us by Laravel 
      * @return array
      */
-    public function formatFailedValidation(MessageBag $_errors)
+    public function formatFailedValidation(array $errorsArr)
     {
         $result = [];
-        $errors = $_errors->toArray();
-
-        if (!$errors) return;
-
-        foreach ($errors as $field => $errorMessages) {
+        foreach ($errorsArr as $field => $errorMessages) {
             $formattedField = lcfirst(preg_replace(
                 '/\s/',
                 '',
@@ -50,16 +44,34 @@ trait FormatRequest
                 ))
             ));
 
-            $parsedKey = explode('.', $formattedField);
-            if (count($parsedKey) !== 1) {
-                $parent = array_shift($parsedKey);
-                foreach ($parsedKey as $value) {
-                    $result[$parent][$value] = $errorMessages[0];
-                }
-            } else {
+            if (!strpos($formattedField, '.')) {
                 $result[$formattedField] = $errorMessages[0];
+            } else {
+                $segments = explode('.', $formattedField);
+                $key = array_shift($segments);
+
+                if (isset($result[$key])) {
+                    $result[$key] += $this->nest($segments, $errorMessages[0]);
+                } else {
+                    $result[$key] = $this->nest($segments, $errorMessages[0]);
+                }
             }
         }
         return $result;
+    }
+
+    private function nest(array $arr, string $message)
+    {
+        if (!$arr) {
+            return;
+        }
+
+        $key = array_shift($arr);
+
+        if (!$arr) {
+            return [$key => $message];
+        }
+
+        return [$key => $this->nest($arr, $message)];
     }
 }

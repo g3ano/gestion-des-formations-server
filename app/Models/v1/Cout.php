@@ -25,11 +25,11 @@ class Cout extends Model
     }
 
     protected $casts = [
-        'pedagogiques' => 'decimal:2',
-        'hebergement_restauration' => 'decimal:2',
-        'transport' => 'decimal:2',
-        'presalaire' => 'decimal:2',
-        'autres_charges' => 'decimal:2',
-        'dont_devise' => 'decimal:2',
+        'pedagogiques' => 'float',
+        'hebergement_restauration' => 'float',
+        'transport' => 'float',
+        'presalaire' => 'float',
+        'autres_charges' => 'float',
+        'dont_devise' => 'float',
     ];
 }

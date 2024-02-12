@@ -8,23 +8,22 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class LocalBaseRequest extends FormRequest
+class BaseRequest extends FormRequest
 {
     use FormatRequest, HandleHttpResponse;
 
-    //NOTE: for development purposes this is disabled
     //protected $stopOnFirstFailure = true;
 
     protected function prepareForValidation()
     {
         $this->merge(
-            $this->formatPreValidation($this)
+            $this->formatPreValidation($this->all()),
         );
     }
 
     protected function failedValidation(Validator $validator)
     {
-        $formattedErrors = $this->formatFailedValidation($validator->errors());
+        $formattedErrors = $this->formatFailedValidation($validator->errors()->toArray());
 
         throw new HttpResponseException($this->failure(
             $formattedErrors,

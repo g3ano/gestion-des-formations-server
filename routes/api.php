@@ -21,4 +21,5 @@ Route::prefix('v1')->group(function () {
 
     require __DIR__ . '/v1/formation.php';
     require __DIR__ . '/v1/employee.php';
+    require __DIR__ . '/v1/action.php';
 });

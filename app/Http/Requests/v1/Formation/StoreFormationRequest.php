@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\v1\Formation;
 
-use App\Http\Requests\v1\LocalBaseRequest;
+use App\Http\Requests\v1\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class StoreFormationRequest extends LocalBaseRequest
+class StoreFormationRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\v1\ActionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,39 +30,16 @@ class FormationResource extends JsonResource
                 "createdAt" => date('Y-m-d', strtotime($this->created_at)),
             ],
             'relationships' => [
-                'intitule' => [
-                    "id" => $this->intitule_id,
-                    "intitule" => $this->intitule,
-                ],
-                'organisme' => [
-                    "id" => $this->organisme_id,
-                    "organisme" => $this->organisme,
-                ],
-                'codeDomaine' => [
-                    "id" => $this->code_domaine_id,
-                    "codeDomaine" => $this->code_domaine,
-                ],
-                "categorie" => [
-                    'id' => $this->categorie_id,
-                    'categorie' => $this->categorie,
-                ],
-                "domaine" => [
-                    'id' => $this->domaine_id,
-                    "domaine" => $this->domaine,
-                ],
-                'type' => [
-                    "id" => $this->type_id,
-                    "type" => $this->type,
-                ],
-                'couts' =>  [
-                    "id" => $this->cout_id,
-                    "pedagogiques" => $this->pedagogiques,
-                    "hebergementRestauration" => $this->hebergement_restauration,
-                    "transport" => $this->transport,
-                    "presalaire" => $this->presalaire,
-                    "autresCharges" => $this->autres_charges,
-                    "dontDevise" => $this->dont_devise,
-                ],
+                'intitule' => $this->whenLoaded('intitule'),
+                "organisme" => $this->whenLoaded('organisme'),
+                "codeDomaine" => $this->whenLoaded('code_domaine'),
+                'categorie' => $this->whenLoaded('categorie'),
+                "domaine" => $this->whenLoaded('domaine'),
+                "type" => $this->whenLoaded('type'),
+                'couts' =>  $this->whenLoaded('cout'),
+                'actions' =>  ActionResource::collection(
+                    $this->whenLoaded('actions')
+                ),
             ]
         ];
     }

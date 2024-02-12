@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\v1\Employee;
 
-use App\Http\Requests\v1\LocalBaseRequest;
+use App\Http\Requests\v1\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateEmployeeRequest extends LocalBaseRequest
+class UpdateEmployeeRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
