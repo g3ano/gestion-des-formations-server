@@ -30,7 +30,9 @@ class FormationController extends Controller
     public function index(Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $formations = Formation::with($includedRelations)->get();
+        $formations = Formation::with($includedRelations)
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
         if (!$formations) {
             throw new HttpResponseException(
@@ -47,7 +49,6 @@ class FormationController extends Controller
     public function show(string $id, Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        return $includedRelations;
         $formation = Formation::with($includedRelations)->where('id', $id)->first();
 
         if ($formation) {
@@ -75,14 +76,14 @@ class FormationController extends Controller
          *          //or new record will be created, if not found
          *      ],
          *      'cout' => [
-         *          //columns that will be inserted into couts table, then return the record id
+         *          //columns that will be inserted into cout table, then return the record id
          *          //these columns are calculated based on the common and/or direct columns,
          *          //e.g:
          *          //pédagogiques:
          *          // 1) h_j multiplied by a price specified by the organisme, lieu and mode
          *          // 2) effectif multiplied by a price specified by the organisme, lieu and
          *          //    mode
-         *          //it's a total mess, basically all couts columns are like this
+         *          //it's a total mess, basically all cout columns are like this
          *          //more investigation on this later
          *          //the goal is to find a clear pattern or formula
          *          //for now i'll do it manually
@@ -140,18 +141,18 @@ class FormationController extends Controller
 
         $data = $request->validated();
 
-        $couts = [];
+        $cout = [];
         foreach ($data['cout'] as $attr => $value) {
             $attrOldValue = $formation->cout->$attr;
 
             if ($attrOldValue && $attrOldValue !== $value) {
-                $couts[$attr] = $value;
+                $cout[$attr] = $value;
             }
         }
 
-        if (count($couts)) {
+        if (count($cout)) {
             $cout = Cout::where('id', $formation->cout_id)
-                ->update($couts);
+                ->update($cout);
 
             $formationData = [
                 'cout_id' => $cout,

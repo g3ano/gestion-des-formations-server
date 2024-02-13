@@ -40,7 +40,7 @@ class UpdateActionRequest extends BaseRequest
             'action.date_fin' => ['bail', 'required'],
             'action.prevision' => ['bail', 'nullable', 'max:255'],
             'participants' => ['bail', 'required', 'array'],
-            'participants.*.employee_id' => ['bail', 'required'],
+            'participants.*.employee_id' => ['bail', 'required', Rule::exists('employees', 'id')],
             'participants.*.observation' => ['bail', 'nullable', 'max:255'],
         ];
     }

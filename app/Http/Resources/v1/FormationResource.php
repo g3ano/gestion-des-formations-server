@@ -37,7 +37,7 @@ class FormationResource extends JsonResource
                 'categorie' => CategorieResource::make($this->whenLoaded('categorie')),
                 "domaine" => DomaineResource::make($this->whenLoaded('domaine')),
                 "type" => TypeResource::make($this->whenLoaded('type')),
-                'couts' =>  CoutResource::make($this->whenLoaded('cout')),
+                'cout' =>  CoutResource::make($this->whenLoaded('cout')),
                 'actions' =>  ActionResource::collection(
                     $this->whenLoaded('actions')
                 ),

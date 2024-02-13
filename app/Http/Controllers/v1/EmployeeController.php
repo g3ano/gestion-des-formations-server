@@ -23,7 +23,9 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $employees = Employee::with($includedRelations)->get();
+        $employees = Employee::with($includedRelations)
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
         if ($employees) {
             return $this->success(

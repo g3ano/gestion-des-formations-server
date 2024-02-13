@@ -30,21 +30,27 @@ class UpdateEmployeeRequest extends BaseRequest
      */
     public function rules(): array
     {
+        $employeeId = $this->segment(4);
         return [
-            'nom' => ['bail', 'required', 'max:255', Rule::unique('employees', 'nom')],
-            'prenom' => ['bail', 'required', 'max:255', Rule::unique('employees', 'prenom')],
+            'matricule' => [
+                'bail', 'required', 'max:6', 'min:6', 'string',
+                Rule::unique('employees', 'matricule')->whereNot(
+                    'id',
+                    $employeeId
+                ),
+            ],
+            'direction' => ['bail', 'required', 'max:50'],
+            'localite' => ['bail', 'required', 'max:50'],
+            'nom' => ['bail', 'required', 'max:255'],
+            'prenom' => ['bail', 'required', 'max:255'],
             'sexe' => ['bail', 'required', Rule::in(['M', 'F'])],
             'csp' => ['bail', 'required', Rule::in(['M', 'C', 'CS'])],
-            'localite' => ['bail', 'required', 'max:50'],
-            'direction' => ['bail', 'required', 'max:50'],
+            'email' => [
+                'bail', 'required', 'email', 'max:255',
+                Rule::unique('employees', 'email')->whereNot('id', $employeeId)
+            ],
             'date_naissance' => ['bail', 'required', 'string'],
             'lieu_naissance' => ['bail', 'required', 'string', 'max:255'],
-            'email' => [
-                'bail', 'required', 'email', 'max:255', Rule::unique('employees', 'email')
-            ],
-            'matricule' => [
-                'bail', 'required', 'string', Rule::unique('employees', 'matricule')
-            ]
         ];
     }
 }

@@ -12,7 +12,7 @@ class BaseRequest extends FormRequest
 {
     use FormatRequest, HandleHttpResponse;
 
-    //protected $stopOnFirstFailure = true;
+    protected $stopOnFirstFailure = true;
 
     protected function prepareForValidation()
     {

@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
         CodeDomaine::factory(100)->create();
         Organisme::factory(100)->create();
         Cout::factory(100)->create();
-        Formation::factory(200)->create();
+        Formation::factory(296)->create();
 
         Employee::factory(100)->create();
         Action::factory(100)->create();

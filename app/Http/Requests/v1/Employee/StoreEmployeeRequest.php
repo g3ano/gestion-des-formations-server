@@ -30,17 +30,21 @@ class StoreEmployeeRequest extends BaseRequest
      */
     public function rules(): array
     {
+        //nom and prénom shouldn't be unique, right?
         return [
-            'nom' => ['bail', 'required', 'max:255', Rule::unique('employees', 'nom')],
-            'prenom' => ['bail', 'required', 'max:255', Rule::unique('employees', 'prenom')],
-            'localite' => ['bail', 'required', 'max:50'],
-            'sexe' => ['bail', 'required', Rule::in(['M', 'F'])],
+            'matricule' => [
+                'bail', 'required', 'string', 'max:6', 'min:6',
+                Rule::unique('employees', 'matricule')
+            ],
             'direction' => ['bail', 'required', 'max:50'],
+            'localite' => ['bail', 'required', 'max:50'],
+            'nom' => ['bail', 'required', 'max:255'],
+            'prenom' => ['bail', 'required', 'max:255'],
+            'sexe' => ['bail', 'required', Rule::in(['M', 'F'])],
             'csp' => ['bail', 'required', Rule::in(['M', 'C', 'CS'])],
-            'date_naissance' => ['bail', 'required'],
-            'lieu_naissance' => ['bail', 'required', 'max:255'],
             'email' => ['bail', 'required', 'email', 'max:255', Rule::unique('employees', 'email')],
-            'matricule' => ['bail', 'required', 'string', Rule::unique('employees', 'matricule')]
+            'date_naissance' => ['bail', 'required', 'date'],
+            'lieu_naissance' => ['bail', 'required', 'max:255'],
         ];
     }
 }

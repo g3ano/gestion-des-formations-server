@@ -48,24 +48,24 @@ class UpdateFormationRequest extends BaseRequest
     public function rules(): array
     {
         return [
+            'direct.structure' => ['bail', 'required'],
             'direct.code_formation' => [
                 'bail', 'required', 'max:3', Rule::in([
                     'CDI', 'CDA', 'CDE', 'LDI', 'LDA', 'LDE',
                     'cdi', 'cda', 'cde', 'ldi', 'lda', 'lde'
                 ])
             ],
-            'direct.structure' => ['bail', 'required'],
             'direct.mode' => ['bail', 'required'],
             'direct.lieu' => ['bail', 'required'],
-            'direct.effectif' => ['bail', 'required', 'integer'],
-            'direct.durree' => ['bail', 'required', 'numeric'],
             'direct.observation' => ['bail', 'nullable', 'string', 'max:255'],
-            'direct.categorie_id' => ['bail', 'required', Rule::exists('categories', 'id')],
             'direct.domaine_id' => ['bail', 'required', Rule::exists('domaines', 'id')],
+            'direct.categorie_id' => ['bail', 'required', Rule::exists('categories', 'id')],
             'direct.type_id' => ['bail', 'required', Rule::exists('types', 'id')],
             'common.intitule' => ['bail', 'required', 'max:255'],
             'common.organisme' => ['bail', 'required', 'max:55'],
             'common.code_domaine' => ['bail', 'required', 'integer'],
+            'direct.effectif' => ['bail', 'required', 'integer'],
+            'direct.durree' => ['bail', 'required', 'numeric'],
             'cout.pedagogiques' => ['bail', 'required'],
             'cout.hebergement_restauration' => ['bail', 'required'],
             'cout.transport' => ['bail', 'required'],
