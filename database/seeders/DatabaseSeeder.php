@@ -108,6 +108,8 @@ class DatabaseSeeder extends Seeder
                 'employee_id' => $eIndex,
                 'action_id' => $aIndex,
                 'observation' => 'some text..',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }

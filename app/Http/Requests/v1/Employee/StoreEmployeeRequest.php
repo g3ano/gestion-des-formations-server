@@ -43,7 +43,7 @@ class StoreEmployeeRequest extends BaseRequest
             'sexe' => ['bail', 'required', Rule::in(['M', 'F'])],
             'csp' => ['bail', 'required', Rule::in(['M', 'C', 'CS'])],
             'email' => ['bail', 'required', 'email', 'max:255', Rule::unique('employees', 'email')],
-            'date_naissance' => ['bail', 'required', 'date'],
+            'date_naissance' => ['bail', 'required', 'integer'],
             'lieu_naissance' => ['bail', 'required', 'max:255'],
         ];
     }

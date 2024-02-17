@@ -15,6 +15,8 @@ class Employee extends Model
 
     public function actions(): BelongsToMany
     {
-        return $this->belongsToMany(Action::class);
+        return $this->belongsToMany(Action::class)
+            ->withTimestamps()
+            ->using(Participant::class);;
     }
 }

@@ -9,7 +9,6 @@ use App\Http\Resources\v1\EmployeeResource;
 use App\Models\v1\Employee;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class EmployeeController extends Controller
 {
@@ -23,7 +22,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $employees = Employee::with($includedRelations)
+        $employees = Employee::with($includedRelations ?? [])
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -46,7 +45,7 @@ class EmployeeController extends Controller
     public function store(StoreEmployeeRequest $request)
     {
         $data = $request->validated();
-        $data['date_naissance'] = new Carbon($data['date_naissance']);
+        $data['date_naissance'] = date('Y-m-d', $data['date_naissance']);
 
         $employee = Employee::create($data);
 
@@ -70,7 +69,7 @@ class EmployeeController extends Controller
     public function show(string $id, Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $employee = Employee::with($includedRelations)
+        $employee = Employee::with($includedRelations ?? [])
             ->where('id', $id)
             ->first();
 
@@ -102,6 +101,7 @@ class EmployeeController extends Controller
         }
 
         $data = $request->validated();
+        $data['date_naissance'] = date('Y-m-d', $data['date_naissance']);
 
         $status = Employee::where('id', $id)
             ->update($data);

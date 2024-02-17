@@ -24,7 +24,7 @@ class EmployeeResource extends JsonResource
                 'sexe' => $this->sexe,
                 'direction' => $this->direction,
                 'csp' => $this->csp,
-                'dateNaissance' => date('Y-m-d', strtotime($this->date_naissance)),
+                'dateNaissance' => strtotime($this->date_naissance),
                 'lieuNaissance' => $this->lieu_naissance,
                 'email' => $this->email,
                 'matricule' => $this->matricule,

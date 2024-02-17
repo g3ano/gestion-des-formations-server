@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Services\Filters;
+namespace App\Services;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class FormationFilter
 {

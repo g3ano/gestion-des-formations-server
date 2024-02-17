@@ -1,10 +1,7 @@
 <?php
 
-namespace App\Services\Traits;
+namespace App\Services;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
-use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
 
 trait FormatRequest
@@ -27,24 +24,18 @@ trait FormatRequest
     }
 
     /**
-     * Expands the flat array given to us by Laravel 
+     * Expands the flat array given to us by Laravel
      * @return array
      */
     public function formatFailedValidation(array $errorsArr)
     {
         $result = [];
         foreach ($errorsArr as $field => $errorMessages) {
-            $formattedField = lcfirst(preg_replace(
-                '/\s/',
-                '',
-                ucwords(preg_replace(
-                    '/_/',
-                    ' ',
-                    $field
-                ))
-            ));
+            $formattedField = preg_replace_callback('/(_)(.)/', function ($groups) {
+                return strtoupper($groups[2]);
+            }, strtolower($field));
 
-            if (!strpos($formattedField, '.')) {
+            if (!str_contains($formattedField, '.')) {
                 $result[$formattedField] = $errorMessages[0];
             } else {
                 $segments = explode('.', $formattedField);

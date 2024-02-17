@@ -17,10 +17,10 @@ class ActionResource extends JsonResource
         return [
             'action' => [
                 "id" => $this->id,
-                "dateDebut" => $this->date_debut,
-                "dateFin" => $this->date_fin,
-                "observation" => $this->observation ? $this->observation : '',
-                "createdAt" => date('Y-m-d', strtotime($this->created_at)),
+                "dateDebut" => strtotime($this->date_debut),
+                "dateFin" => strtotime($this->date_fin),
+                "prevision" => $this->prevision ? $this->prevision : '',
+                "createdAt" => strtotime($this->created_at),
             ],
             'relationships' => [
                 'formation' => FormationResource::make(

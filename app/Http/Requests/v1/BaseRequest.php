@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\v1;
 
-use App\Services\Traits\FormatRequest;
-use App\Services\Traits\HandleHttpResponse;
+use App\Services\FormatRequest;
+use App\Services\HandleHttpResponse;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;

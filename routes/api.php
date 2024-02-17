@@ -19,7 +19,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 
-    require __DIR__ . '/v1/formation.php';
-    require __DIR__ . '/v1/employee.php';
-    require __DIR__ . '/v1/action.php';
+    require __DIR__ . '/v1/Formation.php';
+    require __DIR__ . '/v1/Employee.php';
+    require __DIR__ . '/v1/Action.php';
+    require __DIR__ . '/v1/Participant.php';
 });

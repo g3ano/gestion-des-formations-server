@@ -49,7 +49,7 @@ class UpdateEmployeeRequest extends BaseRequest
                 'bail', 'required', 'email', 'max:255',
                 Rule::unique('employees', 'email')->whereNot('id', $employeeId)
             ],
-            'date_naissance' => ['bail', 'required', 'string'],
+            'date_naissance' => ['bail', 'required', 'integer'],
             'lieu_naissance' => ['bail', 'required', 'string', 'max:255'],
         ];
     }

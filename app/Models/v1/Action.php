@@ -16,7 +16,9 @@ class Action extends Model
 
     public function employees(): BelongsToMany
     {
-        return $this->belongsToMany(Employee::class);
+        return $this->belongsToMany(Employee::class)
+            ->withTimestamps()
+            ->using(Participant::class);
     }
 
     public function formation(): BelongsTo

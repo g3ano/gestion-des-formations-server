@@ -16,8 +16,8 @@ class ActionFactory extends Factory
      */
     public function definition(): array
     {
-        $dateFin = fake()->dateTimeThisYear()->format('Y-m-d');
-        $dateDebut = fake()->dateTimeThisYear($dateFin)->format('Y-m-d');
+        $dateFin = fake()->dateTimeThisMonth(now()->addDays(20))->format('Y-m-d');
+        $dateDebut = fake()->dateTimeThisMonth(now()->subDays(10))->format('Y-m-d');
 
         return [
             'formation_id' => fake()->numberBetween(1, 200),

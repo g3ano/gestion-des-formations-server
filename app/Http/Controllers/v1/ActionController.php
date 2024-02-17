@@ -15,23 +15,25 @@ class ActionController extends Controller
 {
     public $relationships = [
         'formation',
-        'employees'
+        'employees',
     ];
 
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function indexActions(Request $request)
     {
         $included = $this->includeRelations($request);
-        $actions = Action::with($included)
+        $actions = [];
+
+        $actions = Action::with($included ?? [])
             ->orderBy('updated_at', 'desc')
-            ->paginate(2);
+            ->paginate(24);
 
         if ($actions) {
-            return $this->success([
-                'actions' => ActionResource::collection($actions),
-            ]);
+            return $this->success(
+                ActionResource::collection($actions)
+            );
         }
 
         throw new HttpResponseException(
@@ -48,6 +50,9 @@ class ActionController extends Controller
     {
         $data = $request->validated();
 
+        $data['action']['date_debut'] = date('Y-m-d',$data['action']['date_debut']);
+        $data['action']['date_fin'] = date('Y-m-d', $data['action']['date_fin']);
+
         /**
          * @var Action $action
          */
@@ -59,7 +64,6 @@ class ActionController extends Controller
                 ['observation' => $participant['observation']]
             );
         }
-
 
         if ($action) {
             return $this->success([
@@ -79,7 +83,7 @@ class ActionController extends Controller
     public function show(string $id, Request $request)
     {
         $included = $this->includeRelations($request);
-        $action = Action::with($included)->where('id', $id)->first();
+        $action = Action::with($included ?? [])->where('id', $id)->first();
 
         if (!$action) {
             throw new HttpResponseException(
