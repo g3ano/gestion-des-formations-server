@@ -10,10 +10,12 @@ use App\Models\v1\Action;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ActionController extends Controller
 {
-    public $relationships = [
+    protected $relationships = [
         'formation',
         'employees',
     ];
@@ -21,14 +23,32 @@ class ActionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function indexActions(Request $request)
+    public function index(Request $request)
     {
         $included = $this->includeRelations($request);
-        $actions = [];
+        $filterParams = $this->getFilterParams($request);
 
-        $actions = Action::with($included ?? [])
-            ->orderBy('updated_at', 'desc')
-            ->paginate(24);
+        $ids = DB::table('action_employee')
+            ->join('actions', 'action_id', '=', 'actions.id')
+            ->join('employees', 'employee_id', '=', 'employees.id')
+            ->join('formations', 'actions.formation_id', '=', 'formations.id')
+            ->join('types', 'formations.type_id', '=', 'types.id')
+            ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
+            ->join('categories', 'formations.categorie_id', '=', 'categories.id')
+            ->select('actions.id')
+            ->where($filterParams)
+            ->get()
+            ->unique()
+            ->pluck('id');
+
+        $actions = Action::with($included);
+
+        if (empty($ids)) {
+            $actions = $actions->get();
+        } else {
+            $actions = $actions->whereIn('id', $ids)
+                ->get();
+        }
 
         if ($actions) {
             return $this->success(
@@ -50,7 +70,7 @@ class ActionController extends Controller
     {
         $data = $request->validated();
 
-        $data['action']['date_debut'] = date('Y-m-d',$data['action']['date_debut']);
+        $data['action']['date_debut'] = date('Y-m-d', $data['action']['date_debut']);
         $data['action']['date_fin'] = date('Y-m-d', $data['action']['date_fin']);
 
         /**
@@ -162,5 +182,35 @@ class ActionController extends Controller
                 'message' => 'Aucun résultat correspondant n\'a été trouvé',
             ], 404),
         );
+    }
+
+    /**
+     * Gets the filter parameters
+     * @return array
+     */
+    private function getFilterParams(Request $request)
+    {
+        $result = [];
+        $filterColumns = $request->query();
+        $columns = [
+            'direction',
+            'csp',
+            'sexe',
+            'type',
+            'domaine',
+            'mode',
+            'code_formation'
+        ];
+        foreach ($columns as $column) {
+            $queryString = $filterColumns[Str::camel($column)] ?? null;
+            if ($column === 'domaine') {
+                $column = 'abbr';
+            }
+            if (isset($queryString)) {
+                $result[] = [$column, '=', $queryString];
+            }
+        }
+
+        return $result;
     }
 }

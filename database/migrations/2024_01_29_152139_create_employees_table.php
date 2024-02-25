@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('localite', 50);
             $table->string('sexe', 1)->default('M');
             $table->string('direction', 50);
-            $table->string('csp', 1);
+            $table->string('csp', 2);
             $table->date('date_naissance');
             $table->string('lieu_naissance', 255);
             $table->string('email', 255);
