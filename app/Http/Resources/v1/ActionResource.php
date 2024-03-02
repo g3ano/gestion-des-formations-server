@@ -16,11 +16,12 @@ class ActionResource extends JsonResource
     {
         return [
             'action' => [
-                "id" => $this->id,
-                "dateDebut" => strtotime($this->date_debut),
-                "dateFin" => strtotime($this->date_fin),
-                "prevision" => $this->prevision ? $this->prevision : '',
-                "createdAt" => strtotime($this->created_at),
+                'id' => $this->id,
+                'dateDebut' => strtotime($this->date_debut),
+                'dateFin' => strtotime($this->date_fin),
+                'prevision' => $this->prevision ? $this->prevision : '',
+                'createdAt' => strtotime($this->created_at),
+                'activeEmployees' => $this->whenNotNull($this->activeEmployees),
             ],
             'relationships' => [
                 'formation' => FormationResource::make(

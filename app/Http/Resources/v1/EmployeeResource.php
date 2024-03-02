@@ -28,7 +28,7 @@ class EmployeeResource extends JsonResource
                 'lieuNaissance' => $this->lieu_naissance,
                 'email' => $this->email,
                 'matricule' => $this->matricule,
-                'createdAt' => date('Y-m-d', strtotime($this->created_at)),
+                'createdAt' => strtotime($this->created_at),
             ],
             'relationships' => [
                 'actions' => ActionResource::collection(

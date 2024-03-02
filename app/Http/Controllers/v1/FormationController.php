@@ -30,7 +30,7 @@ class FormationController extends Controller
     public function index(Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $formations = Formation::with($includedRelations ?? [])
+        $formations = Formation::with($includedRelations)
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -49,7 +49,7 @@ class FormationController extends Controller
     public function show(string $id, Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $formation = Formation::with($includedRelations ?? [])->where('id', $id)->first();
+        $formation = Formation::with($includedRelations)->where('id', $id)->first();
 
         if ($formation) {
             return $this->success(FormationResource::make($formation));

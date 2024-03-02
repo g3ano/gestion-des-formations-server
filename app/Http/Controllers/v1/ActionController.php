@@ -5,8 +5,10 @@ namespace App\Http\Controllers\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\v1\Action\StoreActionRequest;
 use App\Http\Requests\v1\Action\UpdateActionRequest;
+use App\Http\Resources\v1\ActionCollection;
 use App\Http\Resources\v1\ActionResource;
 use App\Models\v1\Action;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -27,40 +29,41 @@ class ActionController extends Controller
     {
         $included = $this->includeRelations($request);
         $filterParams = $this->getFilterParams($request);
-
-        $ids = DB::table('action_employee')
-            ->join('actions', 'action_id', '=', 'actions.id')
-            ->join('employees', 'employee_id', '=', 'employees.id')
-            ->join('formations', 'actions.formation_id', '=', 'formations.id')
-            ->join('types', 'formations.type_id', '=', 'types.id')
-            ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
-            ->join('categories', 'formations.categorie_id', '=', 'categories.id')
-            ->select('actions.id')
-            ->where($filterParams)
-            ->get()
-            ->unique()
-            ->pluck('id');
-
         $actions = Action::with($included);
 
-        if (empty($ids)) {
-            $actions = $actions->get();
+        if (!empty($filterParams)) {
+            $ids = DB::table('action_employee')
+                ->join('actions', 'action_id', '=', 'actions.id')
+                ->join('employees', 'employee_id', '=', 'employees.id')
+                ->join('formations', 'actions.formation_id', '=', 'formations.id')
+                ->join('types', 'formations.type_id', '=', 'types.id')
+                ->join('domaines', 'formations.domaine_id', '=', 'domaines.id')
+                ->join('categories', 'formations.categorie_id', '=', 'categories.id')
+                ->select('actions.id')
+                ->where($filterParams)
+                ->get()
+                ->unique()
+                ->pluck('id');
+
+            $actions = $actions
+                ->whereIn('id', $ids)
+                ->orderBy('updated_at', 'desc')
+                ->paginate(15);
         } else {
-            $actions = $actions->whereIn('id', $ids)
-                ->get();
+            $actions = $actions
+                ->orderBy('updated_at', 'desc')
+                ->paginate(15);
         }
 
-        if ($actions) {
-            return $this->success(
-                ActionResource::collection($actions)
+        if (!$actions) {
+            throw new HttpResponseException(
+                $this->failure([
+                    'message' => 'Aucun Formation correspondant n\'a été trouvé',
+                ], 404)
             );
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Aucun Formation correspondant n\'a été trouvé',
-            ], 404)
-        );
+        return new ActionCollection($actions);
     }
 
     /**
@@ -103,7 +106,8 @@ class ActionController extends Controller
     public function show(string $id, Request $request)
     {
         $included = $this->includeRelations($request);
-        $action = Action::with($included ?? [])->where('id', $id)->first();
+        /** @var Action $action */
+        $action = Action::with($included)->where('id', $id)->first();
 
         if (!$action) {
             throw new HttpResponseException(
@@ -111,6 +115,20 @@ class ActionController extends Controller
                     'message' => 'Aucun Action correspondant n\'a été trouvé',
                 ], 404)
             );
+        }
+
+        if (Carbon::make($action->date_fin)->greaterThanOrEqualTo(Carbon::now())) {
+            $activeEmployees = [];
+
+            foreach ($action->employees as $employee) {
+                if (
+                    $employee->pivot->created_at->greaterThanOrEqualTo($action->date_debut) && $employee->pivot->created_at->lessThanOrEqualTo($action->date_fin)
+                ) {
+                    $activeEmployees[] = $employee->id;
+                }
+            }
+
+            $action->activeEmployees = $activeEmployees;
         }
 
         return $this->success(
@@ -194,8 +212,6 @@ class ActionController extends Controller
         $filterColumns = $request->query();
         $columns = [
             'direction',
-            'csp',
-            'sexe',
             'type',
             'domaine',
             'mode',
@@ -203,10 +219,11 @@ class ActionController extends Controller
         ];
         foreach ($columns as $column) {
             $queryString = $filterColumns[Str::camel($column)] ?? null;
-            if ($column === 'domaine') {
-                $column = 'abbr';
-            }
+
             if (isset($queryString)) {
+                if ($column === 'domaine') {
+                    $column = 'abbr';
+                }
                 $result[] = [$column, '=', $queryString];
             }
         }

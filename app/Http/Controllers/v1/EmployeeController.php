@@ -22,7 +22,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $employees = Employee::with($includedRelations ?? [])
+        $employees = Employee::with($includedRelations)
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -69,7 +69,7 @@ class EmployeeController extends Controller
     public function show(string $id, Request $request)
     {
         $includedRelations = $this->includeRelations($request);
-        $employee = Employee::with($includedRelations ?? [])
+        $employee = Employee::with($includedRelations)
             ->where('id', $id)
             ->first();
 

@@ -11,12 +11,14 @@ class ActionCollection extends ResourceCollection
     public function paginationInformation($request, $paginated, $default)
     {
         return [
-            'currentPage' => $default['meta']['current_page'],
-            'lastPage' => $default['meta']['last_page'],
-            'perPage' => $default['meta']['per_page'],
-            'total' => $default['meta']['total'],
-            'from' => $default['meta']['from'],
-            'to' => $default['meta']['to'],
+            'meta' => [
+                'total' => $default['meta']['total'],
+                'perPage' => $default['meta']['per_page'],
+                'to' => $default['meta']['to'],
+                'from' => $default['meta']['from'],
+                'currentPage' => $default['meta']['current_page'],
+                'lastPage' => $default['meta']['last_page'],
+            ]
         ];
     }
 
