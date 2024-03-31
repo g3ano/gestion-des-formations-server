@@ -9,11 +9,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class FormationResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
 
@@ -28,7 +23,7 @@ class FormationResource extends JsonResource
                 "durree" => $this->durree,
                 "HJ" => $this->h_j,
                 "observation" => $this->observation ? $this->observation : '',
-                "createdAt" => date('Y-m-d', strtotime($this->created_at)),
+                "createdAt" => strtotime($this->created_at),
             ],
             'relationships' => [
                 'intitule' => IntituleResource::make($this->whenLoaded('intitule')),

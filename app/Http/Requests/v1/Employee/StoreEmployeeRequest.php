@@ -30,7 +30,6 @@ class StoreEmployeeRequest extends BaseRequest
      */
     public function rules(): array
     {
-        //nom and prénom shouldn't be unique, right?
         return [
             'matricule' => [
                 'bail', 'required', 'string', 'max:6', 'min:6',

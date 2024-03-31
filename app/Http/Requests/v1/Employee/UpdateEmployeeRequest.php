@@ -30,24 +30,20 @@ class UpdateEmployeeRequest extends BaseRequest
      */
     public function rules(): array
     {
-        $employeeId = $this->segment(4);
         return [
             'matricule' => [
                 'bail', 'required', 'max:6', 'min:6', 'string',
-                Rule::unique('employees', 'matricule')->whereNot(
-                    'id',
-                    $employeeId
-                ),
+                Rule::unique('employees', 'matricule')->ignore($this->id),
             ],
-            'direction' => ['bail', 'required', 'max:50'],
-            'localite' => ['bail', 'required', 'max:50'],
-            'nom' => ['bail', 'required', 'max:255'],
-            'prenom' => ['bail', 'required', 'max:255'],
+            'direction' => ['bail', 'required', 'string', 'max:50'],
+            'localite' => ['bail', 'required', 'string', 'max:50'],
+            'nom' => ['bail', 'required', 'string', 'max:255'],
+            'prenom' => ['bail', 'required', 'string', 'max:255'],
             'sexe' => ['bail', 'required', Rule::in(['M', 'F'])],
             'csp' => ['bail', 'required', Rule::in(['M', 'C', 'CS'])],
             'email' => [
                 'bail', 'required', 'email', 'max:255',
-                Rule::unique('employees', 'email')->whereNot('id', $employeeId)
+                Rule::unique('employees', 'email')->ignore('id', $this->id)
             ],
             'date_naissance' => ['bail', 'required', 'integer'],
             'lieu_naissance' => ['bail', 'required', 'string', 'max:255'],

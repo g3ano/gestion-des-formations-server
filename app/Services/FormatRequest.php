@@ -60,9 +60,13 @@ trait FormatRequest
         $key = array_shift($arr);
 
         if (!$arr) {
-            return [$key => $message];
+            return [
+                $key => $message
+            ];
         }
 
-        return [$key => $this->nest($arr, $message)];
+        return [
+            $key => $this->nest($arr, $message)
+        ];
     }
 }

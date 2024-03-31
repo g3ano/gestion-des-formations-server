@@ -8,7 +8,6 @@ use App\Http\Requests\v1\Formation\StoreFormationRequest;
 use App\Http\Resources\v1\FormationResource;
 use App\Models\v1\Cout;
 use App\Models\v1\Formation;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,11 +34,9 @@ class FormationController extends Controller
             ->get();
 
         if (!$formations) {
-            throw new HttpResponseException(
-                $this->failure([
-                    'message' => 'Pas des formations trouvées',
-                ], 404)
-            );
+            $this->failure([
+                'message' => 'Pas des formations trouvées',
+            ], 404);
         }
         return $this->success(
             FormationResource::collection($formations)
@@ -55,11 +52,9 @@ class FormationController extends Controller
             return $this->success(FormationResource::make($formation));
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Aucun Formation correspondant n\'a été trouvé',
-            ], 404)
-        );
+        $this->failure([
+            'message' => 'Aucun Formation correspondant n\'a été trouvé',
+        ], 404);
     }
 
     public function store(StoreFormationRequest $request)
@@ -117,11 +112,9 @@ class FormationController extends Controller
             ]);
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Nous n\'avons pas pu effectuer cette action',
-            ])
-        );
+        $this->failure([
+            'message' => 'Nous n\'avons pas pu effectuer cette action',
+        ]);
     }
 
     /**
@@ -132,11 +125,9 @@ class FormationController extends Controller
         $formation = Formation::with(array_diff($this->relationships, ['actions']))->where('id', $id)->first();
 
         if (!$formation) {
-            throw new HttpResponseException(
-                $this->failure([
-                    'message' => 'La Formation n\'est pas trouvée',
-                ], 404)
-            );
+            $this->failure([
+                'message' => 'La Formation n\'est pas trouvée',
+            ], 404);
         }
 
         $data = $request->validated();
@@ -184,11 +175,9 @@ class FormationController extends Controller
             ]);
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Nous n\'avons pas pu effectuer l\'action.',
-            ])
-        );
+        $this->failure([
+            'message' => 'Nous n\'avons pas pu effectuer l\'action.',
+        ]);
     }
 
     /**
@@ -202,18 +191,18 @@ class FormationController extends Controller
 
         $rows = Formation::destroy($ids);
 
-        if ($rows) {
-            return $this->success([
-                'message' => $rows > 1
-                    ? 'Formations ont été supprimés'
-                    : 'Formation a été supprimé.',
-                'effectedRows' => $rows,
+        if (!$rows) {
+            $this->failure([
+                'message' => 'La suppression a échoué, aucune correspondance n\'est trouvée',
             ]);
         }
 
-        throw new HttpResponseException($this->failure([
-            'message' => 'La suppression a échoué, aucune correspondance n\'est trouvée',
-        ]));
+        return $this->success([
+            'message' => $rows > 1
+                ? 'Formations ont été supprimés'
+                : 'Formation a été supprimé.',
+            'effectedRows' => $rows,
+        ]);
     }
 
     /**

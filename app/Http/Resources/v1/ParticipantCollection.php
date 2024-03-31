@@ -11,13 +11,9 @@ class ParticipantCollection extends ResourceCollection
     public function paginationInformation($request, $paginated, $default)
     {
         return [
-            'meta' => [
-                'total' => $default['meta']['total'],
-                'perPage' => $default['meta']['per_page'],
-                'to' => $default['meta']['to'],
-                'from' => $default['meta']['from'],
-                'currentPage' => $default['meta']['current_page'],
-                'lastPage' => $default['meta']['last_page'],
+            'pagination' => [
+                'page' => $default['meta']['current_page'],
+                'pages' => $default['meta']['last_page'],
             ]
         ];
     }

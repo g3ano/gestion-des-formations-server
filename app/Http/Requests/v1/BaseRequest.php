@@ -25,9 +25,9 @@ class BaseRequest extends FormRequest
     {
         $formattedErrors = $this->formatFailedValidation($validator->errors()->toArray());
 
-        throw new HttpResponseException($this->failure(
+        $this->failure(
             $formattedErrors,
             422
-        ));
+        );
     }
 }

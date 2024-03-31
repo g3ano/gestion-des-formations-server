@@ -21,17 +21,29 @@ class EmployeeResource extends JsonResource
                 'nom' => $this->nom,
                 'prenom' => $this->prenom,
                 'localite' => $this->localite,
-                'sexe' => $this->sexe,
                 'direction' => $this->direction,
-                'csp' => $this->csp,
+                'sexe' => $this->sexe,
                 'dateNaissance' => strtotime($this->date_naissance),
                 'lieuNaissance' => $this->lieu_naissance,
                 'email' => $this->email,
                 'matricule' => $this->matricule,
+                'csp' => $this->csp,
+                'observation' => $this->whenPivotLoaded(
+                    'action_employee',
+                    $this->pivot?->observation
+                ),
+                'isActive' => $this->whenPivotLoaded(
+                    'action_employee',
+                    $this->isActive ?: false,
+                ),
+                'startedAt' => $this->whenPivotLoaded(
+                    'action_employee',
+                    strtotime($this->pivot?->created_at)
+                ),
                 'createdAt' => strtotime($this->created_at),
             ],
             'relationships' => [
-                'actions' => ActionResource::collection(
+                'actions' => new ActionCollection(
                     $this->whenLoaded('actions')
                 ),
             ],

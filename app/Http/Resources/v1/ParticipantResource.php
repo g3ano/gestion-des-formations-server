@@ -16,7 +16,10 @@ class ParticipantResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'action' => ActionResource::make($this->whenLoaded('action')),
+            'id' => $this->id,
+            'action' => new ActionResource(
+                $this->whenLoaded('action')
+            ),
             'employee' => EmployeeResource::make(
                 $this->whenLoaded('employee')
             ),

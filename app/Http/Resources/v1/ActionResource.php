@@ -7,11 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ActionResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
@@ -24,7 +19,7 @@ class ActionResource extends JsonResource
                 'activeEmployees' => $this->whenNotNull($this->activeEmployees),
             ],
             'relationships' => [
-                'formation' => FormationResource::make(
+                'formation' => new FormationResource(
                     $this->whenLoaded('formation')
                 ),
                 'employees' => EmployeeResource::collection(

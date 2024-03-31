@@ -12,21 +12,24 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests, HandleHttpResponse;
 
-    protected $relationships;
+    protected $relationships = [];
 
     /**
      * Gets the relationships that should be included when retrieving data.
+     * 
      * **PS:** Turn out that Laravel support nesting relationships with dot,
      * this only checks the parent relationship, 
      * and lets hope the nested relationship is valid
      * or a RelationNotFoundException is thrown by Laravel
+     * 
      * @return array
      */
     protected function includeRelations(Request $request)
     {
         $isNested = false;
         $included = [];
-        $query = $request->query('include');
+        $query = $request->query('includes');
+
         if (is_array($query) && !empty($query)) {
             $result = '';
             foreach ($query as $value) {
@@ -56,6 +59,7 @@ class Controller extends BaseController
                 }
             }
         }
+
         return $included;
     }
 }

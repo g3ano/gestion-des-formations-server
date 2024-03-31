@@ -5,7 +5,6 @@ namespace App\Http\Controllers\v1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\ParticipantCollection;
 use App\Models\v1\Participant;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,13 +16,11 @@ class ParticipantController extends Controller
         'employee',
     ];
 
-    /**
-     * Handle the incoming request.
-     */
     public function __invoke(Request $request)
     {
         $included = $this->includeRelations($request);
         $filterParams = $this->getFilterParams($request);
+
         $participants = Participant::with($included ?: ['action']);
 
         if (!empty($filterParams)) {
@@ -51,11 +48,9 @@ class ParticipantController extends Controller
         }
 
         if (!$participants) {
-            throw new HttpResponseException(
-                $this->failure([
-                    'message' => 'Aucun Formation correspondant n\'a été trouvé',
-                ], 404)
-            );
+            $this->failure([
+                'message' => 'Aucun Formation correspondant n\'a été trouvé',
+            ], 404);
         }
 
         return new ParticipantCollection($participants);

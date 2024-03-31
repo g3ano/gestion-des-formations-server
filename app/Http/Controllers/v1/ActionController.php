@@ -8,9 +8,7 @@ use App\Http\Requests\v1\Action\UpdateActionRequest;
 use App\Http\Resources\v1\ActionCollection;
 use App\Http\Resources\v1\ActionResource;
 use App\Models\v1\Action;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -22,9 +20,6 @@ class ActionController extends Controller
         'employees',
     ];
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $included = $this->includeRelations($request);
@@ -56,23 +51,19 @@ class ActionController extends Controller
         }
 
         if (!$actions) {
-            throw new HttpResponseException(
-                $this->failure([
-                    'message' => 'Aucun Formation correspondant n\'a été trouvé',
-                ], 404)
-            );
+            $this->failure([
+                'message' => 'Aucun Formation correspondant n\'a été trouvé',
+            ], 404);
         }
 
         return new ActionCollection($actions);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreActionRequest $request)
     {
         $data = $request->validated();
 
+        //TODO: check whether the date_fin is after date_debut
         $data['action']['date_debut'] = date('Y-m-d', $data['action']['date_debut']);
         $data['action']['date_fin'] = date('Y-m-d', $data['action']['date_fin']);
 
@@ -81,6 +72,12 @@ class ActionController extends Controller
          */
         $action = Action::create($data['action']);
 
+        if (!$action) {
+            $this->failure([
+                'message' => 'Nous n\'avons pas pu effectuer cette action',
+            ], 500);
+        }
+
         foreach ($data['participants'] as $participant) {
             $action->employees()->attach(
                 $participant['employee_id'],
@@ -88,57 +85,55 @@ class ActionController extends Controller
             );
         }
 
-        if ($action) {
-            return $this->success([
-                'message' => 'L\'Action a été ajoutée avec succès',
-                'actionId' => $action->id,
-            ], 201);
-        }
-
-        throw new HttpResponseException($this->failure([
-            'message' => 'Nous n\'avons pas pu effectuer cette action',
-        ]));
+        return $this->success([
+            'message' => 'L\'Action a été ajoutée avec succès',
+            'actionId' => $action->id,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id, Request $request)
     {
         $included = $this->includeRelations($request);
-        /** @var Action $action */
-        $action = Action::with($included)->where('id', $id)->first();
+
+        /** 
+         * @var Action $action
+         */
+        $action = Action::with($included)
+            ->where('id', $id)
+            ->first();
 
         if (!$action) {
-            throw new HttpResponseException(
-                $this->failure([
-                    'message' => 'Aucun Action correspondant n\'a été trouvé',
-                ], 404)
-            );
+            $this->failure([
+                'message' => 'Aucun Action correspondant n\'a été trouvé',
+            ], 404);
         }
 
-        if (Carbon::make($action->date_fin)->greaterThanOrEqualTo(Carbon::now())) {
-            $activeEmployees = [];
+        $activeEmployees = [];
 
-            foreach ($action->employees as $employee) {
-                if (
-                    $employee->pivot->created_at->greaterThanOrEqualTo($action->date_debut) && $employee->pivot->created_at->lessThanOrEqualTo($action->date_fin)
-                ) {
-                    $activeEmployees[] = $employee->id;
-                }
+        foreach ($action->employees as $employee) {
+            if (
+                $employee->pivot->created_at->greaterThanOrEqualTo($action->date_debut) && $employee->pivot->created_at->lessThanOrEqualTo($action->date_fin)
+            ) {
+                $employee->isActive = true;
+
+                //For backward compatibility only
+                $activeEmployees[] = [
+                    'id' => $employee->id,
+                    'startedAt' => strtotime($employee->pivot->created_at),
+                ];
+            } else {
+                $employee->isActive = false;
             }
-
-            $action->activeEmployees = $activeEmployees;
         }
+
+        //For backward compatibility only
+        $action->activeEmployees = $activeEmployees;
 
         return $this->success(
-            ActionResource::make($action)
+            new ActionResource($action)
         );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateActionRequest $request, string $id)
     {
         $action = Action::with($this->relationships)
@@ -146,12 +141,16 @@ class ActionController extends Controller
             ->first();
 
         if (!$action) {
-            throw new HttpResponseException($this->failure([
+            $this->failure([
                 'message' => 'L\'Action n\est pas trouvé',
-            ], 404));
+            ], 404);
         }
 
-        $data = $request->all();
+        $data = $request->validated();
+
+        //TODO: check whether the date_fin is after date_debut
+        $data['action']['date_debut'] = date('Y-m-d H:i:s', $data['action']['date_debut']);
+        $data['action']['date_fin'] = date('Y-m-d H:i:s', $data['action']['date_fin']);
 
         /**
          * @var BelongsToMany $employees
@@ -168,16 +167,11 @@ class ActionController extends Controller
             ]);
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Nous n\'avons pas pu effectuer cette action',
-            ])
-        );
+        $this->failure([
+            'message' => 'Nous n\'avons pas pu effectuer cette action',
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Request $request)
     {
         $validated = $request->validate([
@@ -195,15 +189,14 @@ class ActionController extends Controller
             ]);
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Aucun résultat correspondant n\'a été trouvé',
-            ], 404),
-        );
+        $this->failure([
+            'message' => 'Aucun résultat correspondant n\'a été trouvé',
+        ], 404);
     }
 
     /**
      * Gets the filter parameters
+     * 
      * @return array
      */
     private function getFilterParams(Request $request)

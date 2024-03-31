@@ -17,6 +17,7 @@ class Employee extends Model
     {
         return $this->belongsToMany(Action::class)
             ->withTimestamps()
+            ->withPivot('observation')
             ->using(Participant::class);;
     }
 }

@@ -7,7 +7,6 @@ use App\Http\Requests\v1\Employee\StoreEmployeeRequest;
 use App\Http\Requests\v1\Employee\UpdateEmployeeRequest;
 use App\Http\Resources\v1\EmployeeResource;
 use App\Models\v1\Employee;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -16,32 +15,25 @@ class EmployeeController extends Controller
         'actions',
     ];
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $includedRelations = $this->includeRelations($request);
+
         $employees = Employee::with($includedRelations)
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        if ($employees) {
-            return $this->success(
-                EmployeeResource::collection($employees),
-            );
-        }
-
-        throw new HttpResponseException(
+        if (!$employees) {
             $this->failure([
                 'message' => 'Aucun Employees correspondant n\'a été trouvé',
-            ], 404)
+            ], 404);
+        }
+
+        return $this->success(
+            EmployeeResource::collection($employees),
         );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreEmployeeRequest $request)
     {
         $data = $request->validated();
@@ -56,16 +48,11 @@ class EmployeeController extends Controller
             ]);
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Nous n\'avons pas pu effectuer cette action',
-            ])
-        );
+        $this->failure([
+            'message' => 'Nous n\'avons pas pu effectuer cette action',
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id, Request $request)
     {
         $includedRelations = $this->includeRelations($request);
@@ -74,7 +61,7 @@ class EmployeeController extends Controller
             ->first();
 
         if (!$employee) {
-            return $this->failure([
+            $this->failure([
                 'message' => 'L\'Employée n\'est pas trouvée',
             ], 404);
         }
@@ -84,20 +71,15 @@ class EmployeeController extends Controller
         );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateEmployeeRequest $request, string $id)
     {
         $employee = Employee::where('id', $id)
             ->first();
 
         if (!$employee) {
-            throw new HttpResponseException(
-                $this->failure([
-                    'message' => 'L\'Employée n\'est pas trouvée',
-                ], 404)
-            );
+            $this->failure([
+                'message' => 'L\'Employée n\'est pas trouvée',
+            ], 404);
         }
 
         $data = $request->validated();
@@ -106,23 +88,18 @@ class EmployeeController extends Controller
         $status = Employee::where('id', $id)
             ->update($data);
 
-        if ($status) {
-            return $this->success([
-                'message' => 'L\'Employée est modifiée',
-                'employeeId' => $employee->id,
+        if (!$status) {
+            $this->failure([
+                'message' => 'Nous n\'avons pas pu effectuer cette action',
             ]);
         }
 
-        throw new HttpResponseException(
-            $this->failure([
-                'message' => 'Nous n\'avons pas pu effectuer cette action',
-            ])
-        );
+        return $this->success([
+            'message' => 'L\'Employée est modifiée',
+            'employeeId' => $employee->id,
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Request $request)
     {
         $rows = [];
@@ -130,19 +107,17 @@ class EmployeeController extends Controller
 
         $rows = Employee::destroy($ids);
 
-        if ($rows) {
-            return $this->success([
-                'message' => $rows > 1
-                    ? 'Employées ont été supprimés'
-                    : 'Employé a été supprimé.',
-                'effectedRows' => $rows,
-            ]);
-        }
-
-        throw new HttpResponseException(
+        if (!$rows) {
             $this->failure([
                 'message' => 'Aucun résultat correspondant n\'a été trouvé',
-            ], 404),
-        );
+            ], 404);
+        }
+
+        return $this->success([
+            'message' => $rows > 1
+                ? 'Employées ont été supprimés'
+                : 'Employé a été supprimé.',
+            'effectedRows' => $rows,
+        ]);
     }
 }
