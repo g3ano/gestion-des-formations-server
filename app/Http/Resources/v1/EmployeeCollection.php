@@ -5,9 +5,8 @@ namespace App\Http\Resources\v1;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class ActionCollection extends ResourceCollection
+class EmployeeCollection extends ResourceCollection
 {
-
     public function paginationInformation($request, $paginated, $default)
     {
         return [

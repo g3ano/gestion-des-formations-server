@@ -10,7 +10,8 @@ class ActionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'action' => [
+            'type' => 'action',
+            'attributes' => [
                 'id' => $this->id,
                 'dateDebut' => strtotime($this->date_debut),
                 'dateFin' => strtotime($this->date_fin),

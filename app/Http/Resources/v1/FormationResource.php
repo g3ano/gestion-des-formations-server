@@ -13,7 +13,8 @@ class FormationResource extends JsonResource
     {
 
         return [
-            'formation' => [
+            'type' => 'formation',
+            'attributes' => [
                 "id" => $this->id,
                 "structure" => $this->structure,
                 "codeFormation" => $this->code_formation,
