@@ -35,10 +35,10 @@ class UpdateActionRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'action.formation_id' => ['bail', 'required', Rule::exists('formations', 'id')],
             'action.date_debut' => ['bail', 'required'],
             'action.date_fin' => ['bail', 'required'],
             'action.prevision' => ['bail', 'nullable', 'max:255'],
+            'action.formation_id' => ['bail', 'required', Rule::exists('formations', 'id')],
             'participants' => ['bail', 'required', 'array'],
             'participants.*.employee_id' => ['bail', 'required', Rule::exists('employees', 'id')],
             'participants.*.observation' => ['bail', 'nullable', 'max:255'],

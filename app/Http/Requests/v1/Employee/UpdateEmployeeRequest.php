@@ -7,9 +7,6 @@ use Illuminate\Validation\Rule;
 
 class UpdateEmployeeRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -23,11 +20,6 @@ class UpdateEmployeeRequest extends BaseRequest
         ];
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -43,7 +35,7 @@ class UpdateEmployeeRequest extends BaseRequest
             'csp' => ['bail', 'required', Rule::in(['M', 'C', 'CS'])],
             'email' => [
                 'bail', 'required', 'email', 'max:255',
-                Rule::unique('employees', 'email')->ignore('id', $this->id)
+                Rule::unique('employees', 'email')->ignore($this->id)
             ],
             'date_naissance' => ['bail', 'required', 'integer'],
             'lieu_naissance' => ['bail', 'required', 'string', 'max:255'],

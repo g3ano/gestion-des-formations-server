@@ -12,6 +12,7 @@ use App\Models\v1\Formation;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
@@ -29,13 +30,13 @@ class SearchController extends Controller
         $includes = $this->includeRelations($request);
 
         if (!$includes) {
-            $includes = ['actions'];
+            return $this->success([]);
         }
 
         $query  = (string) $request->query('query') ?? '';
 
         if (!$query) {
-            return;
+            return $this->success([]);
         }
 
         $result = collect();
@@ -78,7 +79,12 @@ class SearchController extends Controller
              */
             $employees = Employee::where(function (Builder $builder) use ($query) {
                 $builder->where('nom', 'LIKE',  '%' . $query . '%')
-                    ->orWhere('prenom', 'LIKE', '%' . $query . '%');
+                    ->orWhere('prenom', 'LIKE', '%' . $query . '%')
+                    ->orWhere(
+                        DB::raw("CONCAT_WS(' ', nom, prenom)"),
+                        'LIKE',
+                        '%' . $query . '%'
+                    );
             })
                 ->paginate($limit, ['*'], 'page', $page);
 

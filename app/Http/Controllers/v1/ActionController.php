@@ -8,6 +8,7 @@ use App\Http\Requests\v1\Action\UpdateActionRequest;
 use App\Http\Resources\v1\ActionCollection;
 use App\Http\Resources\v1\ActionResource;
 use App\Models\v1\Action;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -63,9 +64,22 @@ class ActionController extends Controller
     {
         $data = $request->validated();
 
-        //TODO: check whether the date_fin is after date_debut
-        $data['action']['date_debut'] = date('Y-m-d', $data['action']['date_debut']);
-        $data['action']['date_fin'] = date('Y-m-d', $data['action']['date_fin']);
+        $startDate =
+            Carbon::createFromTimestamp($data['action']['date_debut']);
+        $dueDate =
+            Carbon::createFromTimestamp($data['action']['date_fin']);
+
+        if ($dueDate->lessThanOrEqualTo($startDate)) {
+            $this->failure([
+                'errors' => [
+                    'date fin' =>
+                    "La date d'échéance ne peut être inférieure ou égale à la date de début",
+                ]
+            ], 422);
+        }
+
+        $data['action']['date_debut'] = $startDate->toDateString();
+        $data['action']['date_fin'] = $dueDate->toDateString();
 
         /**
          * @var Action $action
@@ -77,6 +91,7 @@ class ActionController extends Controller
                 'message' => 'Nous n\'avons pas pu effectuer cette action',
             ], 500);
         }
+
 
         foreach ($data['participants'] as $participant) {
             $action->employees()->attach(
@@ -148,9 +163,22 @@ class ActionController extends Controller
 
         $data = $request->validated();
 
-        //TODO: check whether the date_fin is after date_debut
-        $data['action']['date_debut'] = date('Y-m-d H:i:s', $data['action']['date_debut']);
-        $data['action']['date_fin'] = date('Y-m-d H:i:s', $data['action']['date_fin']);
+        $startDate =
+            Carbon::createFromTimestamp($data['action']['date_debut']);
+        $dueDate =
+            Carbon::createFromTimestamp($data['action']['date_fin']);
+
+        if ($dueDate->lessThanOrEqualTo($startDate)) {
+            $this->failure([
+                'errors' => [
+                    'date fin' =>
+                    "La date d'échéance ne peut être inférieure ou égale à la date de début",
+                ]
+            ], 422);
+        }
+
+        $data['action']['date_debut'] = $startDate->toDateString();
+        $data['action']['date_fin'] = $dueDate->toDateString();
 
         /**
          * @var BelongsToMany $employees
