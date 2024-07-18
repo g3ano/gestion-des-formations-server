@@ -107,7 +107,7 @@ class DatabaseSeeder extends Seeder
             DB::table('action_employee')->insert([
                 'employee_id' => $eIndex,
                 'action_id' => $aIndex,
-                'observation' => 'some text..',
+                'observation' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
