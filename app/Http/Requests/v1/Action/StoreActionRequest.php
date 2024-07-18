@@ -31,7 +31,10 @@ class StoreActionRequest extends BaseRequest
             'action.date_fin' => ['bail', 'required', 'integer'],
             'action.prevision' => ['bail', 'nullable', 'max:255'],
             'action.formation_id' => ['bail', 'required', Rule::exists('formations', 'id')],
-            'participants.*.employee_id' => ['bail', 'required', Rule::exists('employees', 'id')],
+            'participants' => ['bail', 'array', 'required'],
+            'participants.*.employee_id' => [
+                'bail', 'required', 'required', Rule::exists('employees', 'id')
+            ],
             'participants.*.observation' => ['bail', 'nullable', 'max:255'],
         ];
     }

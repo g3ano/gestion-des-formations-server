@@ -123,26 +123,15 @@ class ActionController extends Controller
             ], 404);
         }
 
-        $activeEmployees = [];
-
         foreach ($action->employees as $employee) {
             if (
                 $employee->pivot->created_at->greaterThanOrEqualTo($action->date_debut) && $employee->pivot->created_at->lessThanOrEqualTo($action->date_fin)
             ) {
                 $employee->isActive = true;
-
-                //For backward compatibility only
-                $activeEmployees[] = [
-                    'id' => $employee->id,
-                    'startedAt' => strtotime($employee->pivot->created_at),
-                ];
             } else {
                 $employee->isActive = false;
             }
         }
-
-        //For backward compatibility only
-        $action->activeEmployees = $activeEmployees;
 
         return $this->success(
             new ActionResource($action)

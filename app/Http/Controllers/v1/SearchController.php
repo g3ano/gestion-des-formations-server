@@ -28,14 +28,9 @@ class SearchController extends Controller
         $limit = $request->query('limit') ?? 25;
         $isShuffled = $request->query('isShuffled') ?? false;
         $includes = $this->includeRelations($request);
-
-        if (!$includes) {
-            return $this->success([]);
-        }
-
         $query  = (string) $request->query('query') ?? '';
 
-        if (!$query) {
+        if (!$query || !$includes) {
             return $this->success([]);
         }
 

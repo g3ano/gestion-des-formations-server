@@ -17,7 +17,6 @@ class ActionResource extends JsonResource
                 'dateFin' => strtotime($this->date_fin),
                 'prevision' => $this->prevision ? $this->prevision : '',
                 'createdAt' => strtotime($this->created_at),
-                'activeEmployees' => $this->whenNotNull($this->activeEmployees),
             ],
             'relationships' => [
                 'formation' => new FormationResource(
